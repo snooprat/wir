@@ -1,4 +1,4 @@
 
 TODO:
 * How to draw hex grid? or dont draw?
-* Class stucture
+* Class stucture define, State and window?
