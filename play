@@ -1,0 +1,14 @@
+#!/bin/bash
+
+DIR=$(dirname "$(stat -f "$0")")
+PY="wir.py"
+
+cd "$DIR" || exit $?
+
+if [ -f "$PY" ]
+then
+    python $PY
+else
+    echo "Couldn't find $PY in $DIR/"
+    exit 1
+fi

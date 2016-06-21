@@ -3,10 +3,11 @@
 import curses
 import curses.panel as cpanel
 
+
 class State(object):
     """Game state class
     """
-    
+
     def __init__(self, stdscr):
         """State class initialization
         """
@@ -18,7 +19,7 @@ class State(object):
         """
         stdscr = self.stdscr
         curses.curs_set(0)
-        
+
         self.WINHW = (stdscr.getmaxyx()[0] - 1, stdscr.getmaxyx()[1] - 3)
         self.cur = [0, 0]
         self.mapscr = [0, 0]
@@ -37,18 +38,23 @@ class State(object):
         for y in range(0, self.MAPHW[0]):
             for x in range(0, self.MAPHW[1]+1):
                 # map.addch(y, x, random.randint(32, 122))
-                # if ((x + (y % 2) + 2) / 2) % 2:
+                # if ((x + (y%2) + 2) / 2) % 2:
                 #     map.addch(y, x, '.', CP_FWHITE_BGRAY)
                 # else: 
                 #     map.addch(y, x, '.')
-                grid = ((x + (y % 2) * 3) / 2) % 3
-                if grid == 0:
-                    map.addch(y, x, '.', CP1)
-                elif grid == 1:
-                    map.addch(y, x, '.', CP2)
-                elif grid == 2:
-                    map.addch(y, x, '.', CP3)
-                    self.map = map
+                # grid = ((x + (y%2)*3) / 2) % 3
+                grid = (x + (y%2)*2) % 4
+                if grid == 3:
+                    map.addch(y, x, ' ')
+                # elif grid == 0:
+                #     map.addch(y, x, '.')
+                else:
+                    map.addch(y, x, ':')
+                # elif grid == 1:
+                #     map.addch(y, x, '.')
+                # elif grid == 2:
+                #     map.addch(y, x, '.')
+                self.map = map
 
         dia = curses.newwin(3, 20, self.WINHW[0]/2, (self.WINHW[1]-20)/2)
         dia.border()
@@ -63,7 +69,7 @@ class State(object):
         cpanel.update_panels()
         curses.doupdate()
 
-        self._draw_cur()        
+        self._draw_cur()
         # stdscr.refresh()
         self._draw_map()
         self.run()
@@ -109,7 +115,7 @@ class State(object):
 
     def _draw_cur(self):
         attr = self.map.inch(self.cur[0], self.cur[1]) & curses.A_ATTRIBUTES
-        self.map.chgat(self.cur[0], self.cur[1], 2, attr | curses.A_REVERSE)
+        self.map.chgat(self.cur[0], self.cur[1], 3, attr | curses.A_REVERSE)
 
     def _draw_map(self):
         # self.map.refresh(self.mapscr[0], self.mapscr[1], 0, 0, *self.WINHW)
@@ -119,7 +125,7 @@ class State(object):
 
     def _clear_cur(self):
         attr = self.map.inch(self.cur[0], self.cur[1]) & curses.A_ATTRIBUTES
-        self.map.chgat(self.cur[0], self.cur[1], 2, attr ^ curses.A_REVERSE)
+        self.map.chgat(self.cur[0], self.cur[1], 3, attr ^ curses.A_REVERSE)
 
     def _move_cur(self, dir):
         if self.mapscr[1] <= self.cur[1] <= self.mapscr[1] + self.WINHW[1]:
@@ -127,42 +133,42 @@ class State(object):
                 i = dir / 2
                 if self.mapscr[i] < self.cur[i] and self.cur[i] >= 1 + dir / 2:
                     self._clear_cur()
-                    self.cur[i] -= 1 + dir / 2
+                    self.cur[i] -= 1 + dir / 2*3
                     if dir == 0:
                         if self.cur[i] % 2:
-                            self.cur[1] += 1
-                        else: self.cur[1] -=1
+                            self.cur[1] += 2
+                        else: self.cur[1] -=2
                     self._draw_cur()
                 elif self.cur[i] == self.mapscr[i] and self.mapscr[i] > 0:
-                    self.mapscr[i] -= 1 + dir / 2
+                    self.mapscr[i] -= 1 + dir / 2*3
                     self._clear_cur()
-                    self.cur[i] -= 1 + dir / 2
+                    self.cur[i] -= 1 + dir / 2*3
                     if dir == 0:
                         if self.cur[i] % 2:
-                            self.cur[1] += 1
-                        else: self.cur[1] -=1
+                            self.cur[1] += 2
+                        else: self.cur[1] -=2
                     self._draw_cur()
             elif dir in (1, 3):
                 i = dir / 2
                 if self.cur[i] < self.mapscr[i] + self.WINHW[i] - 1:
                     self._clear_cur()
-                    self.cur[i] += 1 + dir / 2
+                    self.cur[i] += 1 + dir / 2*3
                     if dir == 1:
                         if self.cur[i] % 2:
-                            self.cur[1] += 1
-                        else: self.cur[1] -=1
+                            self.cur[1] += 2
+                        else: self.cur[1] -=2
                     self._draw_cur()
                 elif self.cur[i] == self.mapscr[i] + self.WINHW[i] - 1 and self.mapscr[i] + self.WINHW[i] < self.MAPHW[i]:
-                    self.mapscr[i] += 1 + dir / 2
+                    self.mapscr[i] += 1 + dir / 2*3
                     self._clear_cur()
-                    self.cur[i] += 1 + dir / 2
+                    self.cur[i] += 1 + dir / 2*3
                     if dir == 1:
                         if self.cur[i] % 2:
                             self.cur[1] += 1
                         else: self.cur[1] -=1
                     self._draw_cur()
-            self._draw_map()    
-        
+            self._draw_map()
+
 
 class MainMenu(State):
     """Game main menu
@@ -173,4 +179,4 @@ class GameMap(State):
     """Game running screen
     """
     pass
-        
+
