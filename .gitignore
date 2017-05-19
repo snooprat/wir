@@ -1,3 +1,6 @@
 # python
 *.py[cod]
 *.swp
+
+# hidden files
+.*

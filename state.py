@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import curses
 import curses.panel as cpanel
@@ -12,6 +12,11 @@ class State(object):
         """State class initialization
         """
         self.stdscr = stdscr
+        self.WINHW = (0, 0)
+        self.cur = [0, 0]
+        self.mapscr = [0, 0]
+        self.MAPHW = (0, 0)
+        self.map = 0
         self.start()
 
     def start(self):
@@ -37,26 +42,30 @@ class State(object):
         CP3 = curses.color_pair(3)
         for y in range(0, self.MAPHW[0]):
             for x in range(0, self.MAPHW[1]+1):
+                map.addch(y, x, ':')
+        for y in range(0, self.MAPHW[0], 2):
+            for x in range(0, self.MAPHW[1]+1):
                 # map.addch(y, x, random.randint(32, 122))
                 # if ((x + (y%2) + 2) / 2) % 2:
                 #     map.addch(y, x, '.', CP_FWHITE_BGRAY)
                 # else: 
                 #     map.addch(y, x, '.')
                 # grid = ((x + (y%2)*3) / 2) % 3
-                grid = (x + (y%2)*2) % 4
+                grid = (x + (y/2%2)*2) % 4
                 if grid == 3:
-                    map.addch(y, x, ' ')
+                    map.addch(y, x, ':')
                 # elif grid == 0:
                 #     map.addch(y, x, '.')
                 else:
-                    map.addch(y, x, ':')
+                    map.addch(y, x, ':', curses.A_UNDERLINE)
                 # elif grid == 1:
                 #     map.addch(y, x, '.')
                 # elif grid == 2:
                 #     map.addch(y, x, '.')
                 self.map = map
 
-        dia = curses.newwin(3, 20, self.WINHW[0]/2, (self.WINHW[1]-20)/2)
+        dia = curses.newwin(3, 20, int(self.WINHW[0]/2),
+                int((self.WINHW[1]-20)/2))
         dia.border()
         dia.addstr(1, 4, 'Hello World!')
         dia2 = curses.newwin(5,5,11,40)
@@ -64,6 +73,7 @@ class State(object):
         self.dia = dia
         self.dia2 = dia2
 
+        self.p0 = cpanel.new_panel(self.stdscr)
         self.pdia = cpanel.new_panel(dia)
         self.p2 = cpanel.new_panel(dia2)
         cpanel.update_panels()
@@ -90,8 +100,11 @@ class State(object):
             elif ch == curses.KEY_RIGHT:
                 self._move_cur(3)
             elif ch == ord('1'):
-                if not self.pdia.hidden(): self.pdia.hide()
-                else: self.pdia.show()
+                if not self.pdia.hidden():
+                    self.pdia.hide()
+                    #raise Exception(cpanel.top_panel(), cpanel.bottom_panel())
+                else:
+                    self.pdia.show()
                 # self.p2.move(11, self.dia2.getbegyx()[1] - 1)
                 self._draw_map()
             elif ch == ord('`'):
@@ -130,42 +143,46 @@ class State(object):
     def _move_cur(self, dir):
         if self.mapscr[1] <= self.cur[1] <= self.mapscr[1] + self.WINHW[1]:
             if dir in (0, 2):
-                i = dir / 2
-                if self.mapscr[i] < self.cur[i] and self.cur[i] >= 1 + dir / 2:
+                i = dir // 2
+                if self.mapscr[i] < self.cur[i] and self.cur[i] >= 1 + dir // 2:
                     self._clear_cur()
-                    self.cur[i] -= 1 + dir / 2*3
+                    self.cur[i] -= 1 + dir // 2*3
                     if dir == 0:
                         if self.cur[i] % 2:
                             self.cur[1] += 2
-                        else: self.cur[1] -=2
+                        else:
+                            self.cur[1] -= 2
                     self._draw_cur()
                 elif self.cur[i] == self.mapscr[i] and self.mapscr[i] > 0:
-                    self.mapscr[i] -= 1 + dir / 2*3
+                    self.mapscr[i] -= 1 + dir // 2*3
                     self._clear_cur()
                     self.cur[i] -= 1 + dir / 2*3
                     if dir == 0:
                         if self.cur[i] % 2:
                             self.cur[1] += 2
-                        else: self.cur[1] -=2
+                        else:
+                            self.cur[1] -= 2
                     self._draw_cur()
             elif dir in (1, 3):
-                i = dir / 2
+                i = dir // 2
                 if self.cur[i] < self.mapscr[i] + self.WINHW[i] - 1:
                     self._clear_cur()
-                    self.cur[i] += 1 + dir / 2*3
+                    self.cur[i] += 1 + dir // 2*3
                     if dir == 1:
                         if self.cur[i] % 2:
                             self.cur[1] += 2
-                        else: self.cur[1] -=2
+                        else:
+                            self.cur[1] -= 2
                     self._draw_cur()
                 elif self.cur[i] == self.mapscr[i] + self.WINHW[i] - 1 and self.mapscr[i] + self.WINHW[i] < self.MAPHW[i]:
-                    self.mapscr[i] += 1 + dir / 2*3
+                    self.mapscr[i] += 1 + dir // 2*3
                     self._clear_cur()
-                    self.cur[i] += 1 + dir / 2*3
+                    self.cur[i] += 1 + dir // 2*3
                     if dir == 1:
                         if self.cur[i] % 2:
                             self.cur[1] += 1
-                        else: self.cur[1] -=1
+                        else:
+                            self.cur[1] -= 1
                     self._draw_cur()
             self._draw_map()
 
@@ -174,6 +191,7 @@ class MainMenu(State):
     """Game main menu
     """
     pass
+
 
 class GameMap(State):
     """Game running screen
