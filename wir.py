@@ -18,9 +18,11 @@ def display_menu(stdscr, WINHW):
     title.vline('v', 5)
     #title.newlabel('War in Russia\nv0.0.1')
     logo = spck.Layout(WIN_H, WIN_W)
-    bg = logo.newlabel('', WIN_H, WIN_W, 0, 0)
+    bg =logo.newlabel(WIN_H, WIN_W)
     bg.border()
-    logo.newlabel('War in Russia\nv0.0.1', WIN_H-MENU_H-2, WIN_W-2, 1, 1)
+    tt = logo.newlabel(WIN_H-MENU_H-2, WIN_W-2, 1, 1)
+    tt.update('War in Russia\nv0.0.1',
+            v_align=spck.V_MIDDLE, h_align=spck.H_CENTER)
     logo.hide()
     spck.update()
 
