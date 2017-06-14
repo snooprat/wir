@@ -12,6 +12,8 @@ H_LEFT = 4
 H_CENTER = 5
 H_RIGHT = 6
 
+IGNORE_CH = '`'
+
 def _overloadyx(func, y, x, *args):
     """Overload curses y x functions"""
     if y is not None and x is not None:
@@ -19,7 +21,7 @@ def _overloadyx(func, y, x, *args):
     else:
         func(*args)
 
-def _split_text(text, nrows, ncols, ignore='`'):
+def _split_text(text, nrows, ncols, ignore=IGNORE_CH):
     """Split text in lines"""
     lines = text.splitlines()
     result = []
@@ -44,7 +46,7 @@ def _split_text(text, nrows, ncols, ignore='`'):
             result[i] = line[:ncols-3] + '...'
     return result
 
-def _align_text(text, nrows, ncols, v_align, h_align, ignore='`'):
+def _align_text(text, nrows, ncols, v_align, h_align, ignore=IGNORE_CH):
     """Align text"""
     lines = _split_text(text, nrows, ncols, ignore)
     lines_num = len(lines)
@@ -58,7 +60,6 @@ def _align_text(text, nrows, ncols, v_align, h_align, ignore='`'):
         lines_add = 0
     v_aligned_lines = [''] * lines_add
     v_aligned_lines.extend(lines)
-    print(v_aligned_lines)
     # Horizontal align
     if h_align is H_CENTER:
         for l in v_aligned_lines:
@@ -70,6 +71,10 @@ def _align_text(text, nrows, ncols, v_align, h_align, ignore='`'):
         result = v_aligned_lines
 
     return result
+
+def add_color(color_number, fg, bg, attr=curses.A_NORMAL):
+    curses.init_pair(color_number, fg, bg)
+    return curses.color_pair(color_number) | attr
 
 def update():
     """Update screen display"""
@@ -126,7 +131,7 @@ class Frame(object):
     def border(self):
         self.win.border()
 
-    def chgat(slef, attr, num=None, y=None, x=None):
+    def chgat(self, attr, y=None, x=None, num=None):
         if num is not None:
             _overloadyx(self.win.chgat, y, x, num, attr)
         else:
@@ -186,7 +191,10 @@ class Frame(object):
 
     def refresh(self, pminrow=None, pmincol=None, sminrow=None, smincol=None,
             smaxrow=None, smaxcol=None):
-        self.win.refresh(pminrow, pmincol, sminrow, smincol, smaxrow, smaxcol)
+        if pminrow is not None:
+            self.win.refresh(pminrow, pmincol, sminrow, smincol, smaxrow, smaxcol)
+        else:
+            self.win.refresh()
 
     def derwin(self, nrows, ncols, begin_y, begin_x):
         return self.win.derwin(nrows, ncols, begin_y, begin_x)
@@ -238,7 +246,7 @@ class Widget(Frame):
         super(Widget, self).__init__(win)
         self.pad = None
         self.hl_color = curses.A_BOLD
-        self.hl_mark = '`'
+        self.hl_mark = IGNORE_CH
 
     def _pad_init(self, nrows, ncols):
         if self.pad is None:
@@ -275,6 +283,9 @@ class Label(Widget):
         self._h_align = 0
         self._v_align = 0
         self._attr = 0
+        self._is_focused = False
+        self.focused_color = curses.A_REVERSE
+        self.origin_color = []
 
     def update(self, label=None, attr=None, v_align=None, h_align=None):
         """Update Label status"""
@@ -282,7 +293,34 @@ class Label(Widget):
         attr = self._attr if attr is None else attr
         v_align = self._v_align if v_align is None else v_align
         h_align = self._h_align if h_align is None else h_align
+        #self.clear()
         self.addwstr(label, attr, v_align, h_align)
+
+    def _init_origin_color(self):
+        if len(self.origin_color) == 0:
+            for x in range(self._w):
+                self.origin_color.append(self.inch(0,x))
+
+    def _clear_origin_color(self):
+        if len(self.origin_color) > 0:
+            self.origin_color.clear()
+
+    @property
+    def is_focused(self):
+        return self._is_focused
+
+    @is_focused.setter
+    def is_focused(self, value):
+        if value and not self._is_focused:
+            self._init_origin_color()
+            self.chgat(self.focused_color, 0, 0)
+        elif not value and self._is_focused:
+            for x in range(self._w):
+                for y in range(self._h):
+                    i = y * self._w + x
+                    ch = chr(self.origin_color[i] & curses.A_CHARTEXT)
+                    attr = self.origin_color[i] & curses.A_ATTRIBUTES
+                    self.addch(ch, y, x, attr)
 
 
 class Map(Widget):

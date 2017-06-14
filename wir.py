@@ -11,6 +11,9 @@ def display_menu(stdscr, WINHW):
     MENU_H = 0
     stdscr.clear()
 
+    COLOR_HL = spck.add_color(1, curses.COLOR_YELLOW, curses.COLOR_BLACK,
+            curses.A_BOLD)
+
     title = spck.Layout(WIN_H-MENU_H, WIN_W)
     title.addch(curses.ACS_PI)
     title.addstr('12345', y=4, x=20)
@@ -21,7 +24,8 @@ def display_menu(stdscr, WINHW):
     bg =logo.newlabel(WIN_H, WIN_W)
     bg.border()
     tt = logo.newlabel(WIN_H-MENU_H-2, WIN_W-2, 1, 1)
-    tt.update('War in Russia\nv0.0.1',
+    tt.hl_color = COLOR_HL
+    tt.update('`War in Russia`\nv0.0.1',
             v_align=spck.V_MIDDLE, h_align=spck.H_CENTER)
     logo.hide()
     spck.update()
@@ -41,6 +45,12 @@ def display_menu(stdscr, WINHW):
             c = chr(ch)
             if c in 'Qq':
                 logo.hide()
+            if c is '2':
+                #tt.is_focused = True
+                tt.update('aaaaaa')
+                tt.refresh()
+                #logo.addstr('aaaaaa',1,1)
+                #spck.update
         else:
             pass
 
