@@ -14,12 +14,30 @@ H_RIGHT = 6
 
 IGNORE_CH = '`'
 
+def _is_none(*args):
+    for arg in args:
+        if arg is not None:
+            return False
+    return True
+
 def _overloadyx(func, y, x, *args):
     """Overload curses y x functions"""
-    if y is not None and x is not None:
-        func(y, x, *args)
-    else:
+    if _is_none(y, x):
         func(*args)
+    else:
+        func(y, x, *args)
+
+def _overload(func, *args):
+    if _is_none(*args):
+        func()
+    else:
+        func(*arg)
+
+def _overloadfix(func, fix_arg, *args):
+    if _is_none(*args):
+        func(fix_arg)
+    else:
+        func(fix_arg, *args)
 
 def _split_text(text, nrows, ncols, ignore=IGNORE_CH):
     """Split text in lines"""
@@ -175,13 +193,13 @@ class Frame(object):
 
     def overlay(self, destwin, sminrow=None, smincol=None, dminrow=None,
             dmincol=None, dmaxrow=None, dmaxcol=None):
-        self.win.overlay(destwin, sminrow, smincol, dminrow, dmincol,
-                    dmaxrow, dmaxcol)
+        _overloadfix(self.win.overlay, destwin, sminrow, smincol, dminrow,
+                dmincol, dmaxrow, dmaxcol)
 
     def overwrite(self, destwin, sminrow=None, smincol=None, dminrow=None,
             dmincol=None, dmaxrow=None, dmaxcol=None):
-        self.win.overwrite(destwin, sminrow, smincol, dminrow, dmincol,
-                    dmaxrow, dmaxcol)
+        _overloadfix(self.win.overwrite, destwin, sminrow, smincol, dminrow,
+                dmincol, dmaxrow, dmaxcol)
 
     def resize(self, nrows, ncols):
         self.win.resize(nrows, ncols)
@@ -191,10 +209,8 @@ class Frame(object):
 
     def refresh(self, pminrow=None, pmincol=None, sminrow=None, smincol=None,
             smaxrow=None, smaxcol=None):
-        if pminrow is not None:
-            self.win.refresh(pminrow, pmincol, sminrow, smincol, smaxrow, smaxcol)
-        else:
-            self.win.refresh()
+        _overload(self.win.refresh, pminrow, pmincol, sminrow, smincol,
+                smaxrow, smaxcol)
 
     def derwin(self, nrows, ncols, begin_y, begin_x):
         return self.win.derwin(nrows, ncols, begin_y, begin_x)
