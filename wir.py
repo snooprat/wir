@@ -46,11 +46,10 @@ def display_menu(stdscr, WINHW):
             if c in 'Qq':
                 logo.hide()
             if c is '2':
-                #tt.is_focused = True
-                tt.update('aaaaaa')
-                tt.refresh()
-                #logo.addstr('aaaaaa',1,1)
+                tt.is_focused = True
                 #spck.update
+            if c is '3':
+                tt.is_focused = False
         else:
             pass
 

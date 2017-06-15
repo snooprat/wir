@@ -23,21 +23,21 @@ def _is_none(*args):
 def _overloadyx(func, y, x, *args):
     """Overload curses y x functions"""
     if _is_none(y, x):
-        func(*args)
+        return func(*args)
     else:
-        func(y, x, *args)
+        return func(y, x, *args)
 
 def _overload(func, *args):
     if _is_none(*args):
-        func()
+        return func()
     else:
-        func(*arg)
+        return func(*arg)
 
 def _overloadfix(func, fix_arg, *args):
     if _is_none(*args):
-        func(fix_arg)
+        return func(fix_arg)
     else:
-        func(fix_arg, *args)
+        return func(fix_arg, *args)
 
 def _split_text(text, nrows, ncols, ignore=IGNORE_CH):
     """Split text in lines"""
@@ -141,7 +141,7 @@ class Frame(object):
         self.win.insdelln(-nlines)
 
     def inch(self, y=None, x=None):
-        _overloadyx(self.win.inch, y, x)
+        return _overloadyx(self.win.inch, y, x)
 
     def bkgd(self, ch, attr=0):
         self.win.bkgd(ch, attr)
@@ -309,7 +309,7 @@ class Label(Widget):
         attr = self._attr if attr is None else attr
         v_align = self._v_align if v_align is None else v_align
         h_align = self._h_align if h_align is None else h_align
-        #self.clear()
+        self.clear()
         self.addwstr(label, attr, v_align, h_align)
 
     def _init_origin_color(self):
@@ -330,13 +330,14 @@ class Label(Widget):
         if value and not self._is_focused:
             self._init_origin_color()
             self.chgat(self.focused_color, 0, 0)
+            self.refresh()
         elif not value and self._is_focused:
-            for x in range(self._w):
-                for y in range(self._h):
-                    i = y * self._w + x
-                    ch = chr(self.origin_color[i] & curses.A_CHARTEXT)
-                    attr = self.origin_color[i] & curses.A_ATTRIBUTES
-                    self.addch(ch, y, x, attr)
+            for i, content in enumerate(self.origin_color):
+                    ch = chr(content & curses.A_CHARTEXT)
+                    attr = content & curses.A_ATTRIBUTES
+                    self.addch(ch, 0, i, attr)
+            self.refresh()
+        self._is_focused = value
 
 
 class Map(Widget):
