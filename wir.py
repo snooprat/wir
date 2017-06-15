@@ -36,7 +36,8 @@ def display_menu(stdscr, WINHW):
             if c in 'Qq':
                 exit()
             if c is '1':
-                logo.show()
+                #logo.show()
+                tt.refresh()
         else:
             pass
 
