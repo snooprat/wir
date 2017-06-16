@@ -15,14 +15,14 @@ def display_menu(stdscr, WINHW):
             curses.A_BOLD)
 
     title = spck.Layout(WIN_H-MENU_H, WIN_W)
-    title.addch(curses.ACS_PI)
-    title.addstr('12345', y=4, x=20)
-    title.hline('h', 5)
-    title.vline('v', 5)
+    title.win.addch(curses.ACS_PI)
+    title.win.addstr(4, 20, '12345')
+    title.win.hline('h', 5)
+    title.win.vline('v', 5)
     #title.newlabel('War in Russia\nv0.0.1')
     logo = spck.Layout(WIN_H, WIN_W)
     bg =logo.newlabel(WIN_H, WIN_W)
-    bg.border()
+    bg.win.border()
     tt = logo.newlabel(WIN_H-MENU_H-2, WIN_W-2, 1, 1)
     tt.hl_color = COLOR_HL
     tt.update('`War in Russia`\nv0.0.1',

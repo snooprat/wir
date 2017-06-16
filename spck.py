@@ -14,31 +14,6 @@ H_RIGHT = 6
 
 IGNORE_CH = '`'
 
-def _is_none(*args):
-    for arg in args:
-        if arg is not None:
-            return False
-    return True
-
-def _overloadyx(func, y, x, *args):
-    """Overload curses y x functions"""
-    if _is_none(y, x):
-        return func(*args)
-    else:
-        return func(y, x, *args)
-
-def _overload(func, *args):
-    if _is_none(*args):
-        return func()
-    else:
-        return func(*arg)
-
-def _overloadfix(func, fix_arg, *args):
-    if _is_none(*args):
-        return func(fix_arg)
-    else:
-        return func(fix_arg, *args)
-
 def _split_text(text, nrows, ncols, ignore=IGNORE_CH):
     """Split text in lines"""
     lines = text.splitlines()
@@ -103,120 +78,11 @@ def run():
     """Run the top layout's function."""
     while True:
         top_layout = curses.panel.top_panel().userptr()
-        ch = top_layout.getch()
+        ch = top_layout.win.getch()
         top_layout.keyfunc(ch)
 
 
-class Frame(object):
-    """Basic window frame based on curses window object."""
-
-    def __init__(self, win):
-        self.win = win
-
-    def addch(self, ch, y=None, x=None, attr=0):
-        _overloadyx(self.win.addch, y, x, ch, attr)
-
-    def addstr(self, str, y=None, x=None, attr=0):
-        _overloadyx(self.win.addstr, y, x, str, attr)
-
-    def hline(self, ch, n, y=None, x=None):
-        _overloadyx(self.win.hline, y, x, ch, n)
-
-    def vline(self, ch, n, y=None, x=None):
-        _overloadyx(self.win.vline, y, x, ch, n)
-
-    def insch(self, ch, y=None, x=None, attr=0):
-        _overloadyx(self.win.insch, y, x, ch, attr)
-
-    def insstr(self, str, y=None, x=None, attr=0):
-        _overloadyx(self.win.insstr, y, x, str, attr)
-
-    def instr(self, str, n, y=None, x=None):
-        _overloadyx(self.win.instr, y, x, str, n)
-
-    def insertln(self, nlines=1):
-        self.win.insdelln(nlines)
-
-    def deleteln(self, nlines=1):
-        self.win.insdelln(-nlines)
-
-    def inch(self, y=None, x=None):
-        return _overloadyx(self.win.inch, y, x)
-
-    def bkgd(self, ch, attr=0):
-        self.win.bkgd(ch, attr)
-
-    def border(self):
-        self.win.border()
-
-    def chgat(self, attr, y=None, x=None, num=None):
-        if num is not None:
-            _overloadyx(self.win.chgat, y, x, num, attr)
-        else:
-            _overloadyx(self.win.chgat, y, x, attr)
-
-    def clear(self):
-        self.win.clear()
-
-    def clrtobot(self):
-        self.win.clrtobot()
-
-    def clrtoeol(self):
-        self.win.clrtoeol()
-
-    def delch(self, y=None, x=None):
-        _overloadyx(self.win.delch, y, x)
-
-    def getbegyx(self):
-        return self.win.getbegyx()
-
-    def getmaxyx(self):
-        return self.win.getmaxyx()
-
-    def getparyx(self):
-        return self.win.getparyx()
-
-    def mvwin(self, new_y, new_x):
-        self.win.mvwin(new_y, new_x)
-
-    def mvderwin(self, y, x):
-        self.win.mvderwin(y, x)
-
-    def getch(self):
-        return self.win.getch()
-
-    def getyx(self):
-        return self.win.getyx()
-
-    def move(self, new_y, new_x):
-        self.win.move(new_y, new_x)
-
-    def overlay(self, destwin, sminrow=None, smincol=None, dminrow=None,
-            dmincol=None, dmaxrow=None, dmaxcol=None):
-        _overloadfix(self.win.overlay, destwin, sminrow, smincol, dminrow,
-                dmincol, dmaxrow, dmaxcol)
-
-    def overwrite(self, destwin, sminrow=None, smincol=None, dminrow=None,
-            dmincol=None, dmaxrow=None, dmaxcol=None):
-        _overloadfix(self.win.overwrite, destwin, sminrow, smincol, dminrow,
-                dmincol, dmaxrow, dmaxcol)
-
-    def resize(self, nrows, ncols):
-        self.win.resize(nrows, ncols)
-
-    def redrawln(self, beg, num):
-        self.win.redrawln(beg, num)
-
-    def refresh(self, pminrow=None, pmincol=None, sminrow=None, smincol=None,
-            smaxrow=None, smaxcol=None):
-        _overload(self.win.refresh, pminrow, pmincol, sminrow, smincol,
-                smaxrow, smaxcol)
-
-    def derwin(self, nrows, ncols, begin_y, begin_x):
-        return self.win.derwin(nrows, ncols, begin_y, begin_x)
-
-
-class Layout(Frame):
+class Layout(object):
     """A Layout is a display area."""
 
     def __init__(self, h, w, y=0, x=0):
@@ -224,8 +90,7 @@ class Layout(Frame):
         self._w = w
         self._y = y
         self._x = x
-        win = curses.newwin(h, w, y, x)
-        super(Layout, self).__init__(win)
+        self.win = curses.newwin(h, w, y, x)
         self.panel = cpanel.new_panel(self.win)
         self.panel.set_userptr(self)
         self.keyfunc = None
@@ -246,7 +111,7 @@ class Layout(Frame):
         return Label(self, h, w, y, x)
 
 
-class Widget(Frame):
+class Widget(object):
     """A Widget is a re-usable component that can be used to create a simple GUI.
     """
 
@@ -256,8 +121,7 @@ class Widget(Frame):
         self._w = w
         self._y = y
         self._x = x
-        win = layout.derwin(h, w, y, x)
-        super(Widget, self).__init__(win)
+        self.win = layout.win.derwin(h, w, y, x)
         self.pad = None
         self.hl_color = curses.A_BOLD
         self.hl_mark = IGNORE_CH
@@ -275,11 +139,11 @@ class Widget(Frame):
         text = str.split(self.hl_mark)
         for i, t in enumerate(text):
             if i == 0:
-                self.addstr(t, y, x, attr)
+                self.win.addstr(y, x, t, attr)
             elif i%2 == 0:
-                self.addstr(t, attr=attr)
+                self.win.addstr(t, attr)
             elif i%2 == 1:
-                self.addstr(t, attr=self.hl_color)
+                self.win.addstr(t, self.hl_color)
 
     def addwstr(self, str, attr=0, v_align=0, h_align=0):
         lines = _align_text(str, self._h, self._w, v_align, h_align, self.hl_mark)
@@ -308,7 +172,7 @@ class Label(Widget):
         attr = self._attr if attr is None else attr
         v_align = self._v_align if v_align is None else v_align
         h_align = self._h_align if h_align is None else h_align
-        self.clear()
+        self.win.clear()
         self.addwstr(label, attr, v_align, h_align)
 
     @property
@@ -324,21 +188,21 @@ class Label(Widget):
         if value and not self._is_focused:
             if self.origin_pad is None:
                 self.origin_pad = curses.newpad(h, w)
-                self.overwrite(self.origin_pad, 0, 0, 0, 0, maxrow, maxcol)
+                self.win.overwrite(self.origin_pad, 0, 0, 0, 0, maxrow, maxcol)
             if self.focused_pad is None:
                 self.focused_pad = curses.newpad(h, w)
-                self.overwrite(self.focused_pad, 0, 0, 0, 0, maxrow, maxcol)
+                self.win.overwrite(self.focused_pad, 0, 0, 0, 0, maxrow, maxcol)
                 for y in range(h):
                     self.focused_pad.chgat(y, 0, self.focused_color)
             if self.focused_pad is not None:
-                self.clear()
+                self.win.clear()
                 self.focused_pad.overwrite(self.win, 0, 0, 0, 0, maxrow, maxcol)
-            self.refresh()
+            self.win.refresh()
         elif not value and self._is_focused:
             if self.origin_pad is not None:
-                self.clear()
+                self.win.clear()
                 self.origin_pad.overlay(self.win, 0, 0, 0, 0, maxrow, maxcol)
-            self.refresh()
+            self.win.refresh()
         self._is_focused = value
 
 
