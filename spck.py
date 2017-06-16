@@ -239,12 +239,10 @@ class Layout(Frame):
     def hide(self):
         self.panel.hide()
 
-    def newlabel(self, h=None, w=None, y=None, x=None):
+    def newlabel(self, h=None, w=None, y=0, x=0):
         # Pass object default value
         h = self._h if h is None else h
         w = self._w if w is None else w
-        y = self._y if y is None else y
-        x = self._x if x is None else x
         return Label(self, h, w, y, x)
 
 
@@ -301,7 +299,8 @@ class Label(Widget):
         self._attr = 0
         self._is_focused = False
         self.focused_color = curses.A_REVERSE
-        self.origin_color = []
+        self.focused_pad = None
+        self.origin_pad = None
 
     def update(self, label=None, attr=None, v_align=None, h_align=None):
         """Update Label status"""
@@ -312,30 +311,33 @@ class Label(Widget):
         self.clear()
         self.addwstr(label, attr, v_align, h_align)
 
-    def _init_origin_color(self):
-        if len(self.origin_color) == 0:
-            for x in range(self._w):
-                self.origin_color.append(self.inch(0,x))
-
-    def _clear_origin_color(self):
-        if len(self.origin_color) > 0:
-            self.origin_color.clear()
-
     @property
     def is_focused(self):
         return self._is_focused
 
     @is_focused.setter
     def is_focused(self, value):
+        h = self._h
+        w = self._w
+        maxrow = h - 1
+        maxcol = w - 1
         if value and not self._is_focused:
-            self._init_origin_color()
-            self.chgat(self.focused_color, 0, 0)
+            if self.origin_pad is None:
+                self.origin_pad = curses.newpad(h, w)
+                self.overwrite(self.origin_pad, 0, 0, 0, 0, maxrow, maxcol)
+            if self.focused_pad is None:
+                self.focused_pad = curses.newpad(h, w)
+                self.overwrite(self.focused_pad, 0, 0, 0, 0, maxrow, maxcol)
+                for y in range(h):
+                    self.focused_pad.chgat(y, 0, self.focused_color)
+            if self.focused_pad is not None:
+                self.clear()
+                self.focused_pad.overwrite(self.win, 0, 0, 0, 0, maxrow, maxcol)
             self.refresh()
         elif not value and self._is_focused:
-            for i, content in enumerate(self.origin_color):
-                    ch = chr(content & curses.A_CHARTEXT)
-                    attr = content & curses.A_ATTRIBUTES
-                    self.addch(ch, 0, i, attr)
+            if self.origin_pad is not None:
+                self.clear()
+                self.origin_pad.overlay(self.win, 0, 0, 0, 0, maxrow, maxcol)
             self.refresh()
         self._is_focused = value
 
