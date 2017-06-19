@@ -47,9 +47,9 @@ def display_menu(stdscr, WINHW):
                 logo.hide()
             if c is '2':
                 tt.is_focused = True
-                #spck.update
             if c is '3':
                 tt.is_focused = False
+            spck.update()
         else:
             pass
 

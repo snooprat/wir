@@ -71,6 +71,8 @@ def add_color(color_number, fg, bg, attr=curses.A_NORMAL):
 
 def update():
     """Update screen display"""
+    top_layout = curses.panel.top_panel().userptr()
+    top_layout.refresh()
     cpanel.update_panels()
     curses.doupdate()
 
@@ -91,18 +93,26 @@ class Layout(object):
         self._y = y
         self._x = x
         self.win = curses.newwin(h, w, y, x)
+        self.pad = curses.newpad(h, w)
         self.panel = cpanel.new_panel(self.win)
         self.panel.set_userptr(self)
         self.keyfunc = None
+        self._need_refresh = False
 
     def set_keyfunc(self, func):
         self.keyfunc = func
 
     def show(self):
+        self.refresh()
         self.panel.show()
 
     def hide(self):
         self.panel.hide()
+
+    def refresh(self):
+        if self._need_refresh:
+            self.pad.overwrite(self.win, 0, 0, 0, 0, self._h-1, self._w-1)
+            self._need_refresh = False
 
     def newlabel(self, h=None, w=None, y=0, x=0):
         # Pass object default value
@@ -121,19 +131,9 @@ class Widget(object):
         self._w = w
         self._y = y
         self._x = x
-        self.win = layout.win.derwin(h, w, y, x)
-        self.pad = None
+        self.win = layout.pad.derwin(h, w, y, x)
         self.hl_color = curses.A_BOLD
         self.hl_mark = IGNORE_CH
-
-    def _pad_init(self, nrows, ncols):
-        if self.pad is None:
-            pad = curses.newpad(nrows, ncols)
-            self.pad = Frame(pad)
-        return self.pad
-
-    def _pad_update(self, sminrow, smincol):
-        self.pad.overwrite(self.win, sminrow, smincol, 0, 0, self._h, self._w)
 
     def addhstr(self, str, y=None, x=None, attr=0):
         text = str.split(self.hl_mark)
@@ -149,6 +149,12 @@ class Widget(object):
         lines = _align_text(str, self._h, self._w, v_align, h_align, self.hl_mark)
         for i, text in enumerate(lines):
             self.addhstr(text, i, 0, attr)
+
+    def refresh(self):
+        self.layout._need_refresh = True
+
+    def clear(self):
+        self.win.clear()
 
 
 class Label(Widget):
@@ -174,6 +180,21 @@ class Label(Widget):
         h_align = self._h_align if h_align is None else h_align
         self.win.clear()
         self.addwstr(label, attr, v_align, h_align)
+        self.refresh()
+
+    def _init_origin_pad(self):
+        if self.origin_pad is None:
+            self.origin_pad = curses.newpad(self._h, self._w)
+            self.win.overwrite(self.origin_pad, 0, 0, 0, 0, self._h-1,
+                    self._w-1)
+
+    def _init_focused_pad(self):
+        if self.focused_pad is None:
+            self.focused_pad = curses.newpad(self._h, self._w)
+            self.win.overwrite(self.focused_pad, 0, 0, 0, 0, self._h-1,
+                    self._w-1)
+            for y in range(self._h):
+                self.focused_pad.chgat(y, 0, self.focused_color)
 
     @property
     def is_focused(self):
@@ -186,23 +207,17 @@ class Label(Widget):
         maxrow = h - 1
         maxcol = w - 1
         if value and not self._is_focused:
-            if self.origin_pad is None:
-                self.origin_pad = curses.newpad(h, w)
-                self.win.overwrite(self.origin_pad, 0, 0, 0, 0, maxrow, maxcol)
-            if self.focused_pad is None:
-                self.focused_pad = curses.newpad(h, w)
-                self.win.overwrite(self.focused_pad, 0, 0, 0, 0, maxrow, maxcol)
-                for y in range(h):
-                    self.focused_pad.chgat(y, 0, self.focused_color)
+            self._init_origin_pad()
+            self._init_focused_pad()
             if self.focused_pad is not None:
                 self.win.clear()
                 self.focused_pad.overwrite(self.win, 0, 0, 0, 0, maxrow, maxcol)
-            self.win.refresh()
+            self.refresh()
         elif not value and self._is_focused:
             if self.origin_pad is not None:
                 self.win.clear()
                 self.origin_pad.overlay(self.win, 0, 0, 0, 0, maxrow, maxcol)
-            self.win.refresh()
+            self.refresh()
         self._is_focused = value
 
 
