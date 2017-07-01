@@ -14,6 +14,7 @@ H_RIGHT = 6
 
 IGNORE_CH = '`'
 
+
 def _split_text(text, nrows, ncols, ignore=IGNORE_CH):
     """Split text in lines"""
     lines = text.splitlines()
@@ -22,7 +23,8 @@ def _split_text(text, nrows, ncols, ignore=IGNORE_CH):
         current_line = ''
         line_words = l.split(' ')
         for word in line_words:
-            cl_len = len(current_line.replace(ignore, '')+word.replace(ignore, ''))
+            cl_len = len(current_line.replace(ignore, '')
+                         + word.replace(ignore, ''))
             if current_line and cl_len > ncols:
                 result.append(current_line.rstrip())
                 current_line = word + ' '
@@ -38,6 +40,7 @@ def _split_text(text, nrows, ncols, ignore=IGNORE_CH):
         if len(line.replace(ignore, '')) > ncols:
             result[i] = line[:ncols-3] + '...'
     return result
+
 
 def _align_text(text, nrows, ncols, v_align, h_align, ignore=IGNORE_CH):
     """Align text"""
@@ -65,9 +68,11 @@ def _align_text(text, nrows, ncols, v_align, h_align, ignore=IGNORE_CH):
 
     return result
 
+
 def add_color(color_number, fg, bg, attr=curses.A_NORMAL):
     curses.init_pair(color_number, fg, bg)
     return curses.color_pair(color_number) | attr
+
 
 def update():
     """Update screen display"""
@@ -76,12 +81,13 @@ def update():
     cpanel.update_panels()
     curses.doupdate()
 
+
 def run():
     """Run the top layout's function."""
     while True:
         top_layout = curses.panel.top_panel().userptr()
         ch = top_layout.win.getch()
-        top_layout.keyfunc(ch)
+        top_layout.callback_keys(ch)
 
 
 class Layout(object):
@@ -96,11 +102,10 @@ class Layout(object):
         self.pad = curses.newpad(h, w)
         self.panel = cpanel.new_panel(self.win)
         self.panel.set_userptr(self)
-        self.keyfunc = None
         self._need_refresh = False
 
-    def set_keyfunc(self, func):
-        self.keyfunc = func
+    def callback_keys(self, ch):
+        pass
 
     def show(self):
         self.refresh()
@@ -140,13 +145,14 @@ class Widget(object):
         for i, t in enumerate(text):
             if i == 0:
                 self.win.addstr(y, x, t, attr)
-            elif i%2 == 0:
+            elif i % 2 == 0:
                 self.win.addstr(t, attr)
-            elif i%2 == 1:
+            elif i % 2 == 1:
                 self.win.addstr(t, self.hl_color)
 
     def addwstr(self, str, attr=0, v_align=0, h_align=0):
-        lines = _align_text(str, self._h, self._w, v_align, h_align, self.hl_mark)
+        lines = _align_text(str, self._h, self._w, v_align, h_align,
+                            self.hl_mark)
         for i, text in enumerate(lines):
             self.addhstr(text, i, 0, attr)
 
@@ -168,8 +174,8 @@ class Label(Widget):
         self._v_align = 0
         self._attr = 0
         self._is_focused = False
-        self.focused_color = curses.A_REVERSE
-        self.focused_pad = None
+        self.focus_color = curses.A_REVERSE
+        self.focus_pad = None
         self.origin_pad = None
 
     def update(self, label=None, attr=None, v_align=None, h_align=None):
@@ -185,16 +191,18 @@ class Label(Widget):
     def _init_origin_pad(self):
         if self.origin_pad is None:
             self.origin_pad = curses.newpad(self._h, self._w)
-            self.win.overwrite(self.origin_pad, 0, 0, 0, 0, self._h-1,
-                    self._w-1)
+            maxrow = self._h - 1
+            maxcol = self._w - 1
+            self.win.overwrite(self.origin_pad, 0, 0, 0, 0, maxrow, maxcol)
 
-    def _init_focused_pad(self):
-        if self.focused_pad is None:
-            self.focused_pad = curses.newpad(self._h, self._w)
-            self.win.overwrite(self.focused_pad, 0, 0, 0, 0, self._h-1,
-                    self._w-1)
+    def _init_focus_pad(self):
+        if self.focus_pad is None:
+            self.focus_pad = curses.newpad(self._h, self._w)
+            maxrow = self._h - 1
+            maxcol = self._w - 1
+            self.win.overwrite(self.focus_pad, 0, 0, 0, 0, maxrow, maxcol)
             for y in range(self._h):
-                self.focused_pad.chgat(y, 0, self.focused_color)
+                self.focus_pad.chgat(y, 0, self.focus_color)
 
     @property
     def is_focused(self):
@@ -208,10 +216,10 @@ class Label(Widget):
         maxcol = w - 1
         if value and not self._is_focused:
             self._init_origin_pad()
-            self._init_focused_pad()
-            if self.focused_pad is not None:
+            self._init_focus_pad()
+            if self.focus_pad is not None:
                 self.win.clear()
-                self.focused_pad.overwrite(self.win, 0, 0, 0, 0, maxrow, maxcol)
+                self.focus_pad.overwrite(self.win, 0, 0, 0, 0, maxrow, maxcol)
             self.refresh()
         elif not value and self._is_focused:
             if self.origin_pad is not None:
@@ -228,18 +236,32 @@ class Map(Widget):
         super(Map, self).__init__(layout, h, w, y, x)
         self._maph = maph
         self._mapw = mapw
-        self._pad_init(maph, mapw)
         self._mapdrawy = 0
         self._mapdrawx = 0
         self._cur_y = 0
         self._cur_x = 0
 
     def draw_map(self):
-        self._pad_update(self._mapdrawy, self._mapdrawx)
+        pass
 
     def move_map(self):
         pass
 
 
 class List(Widget):
-    pass
+    """A simple List"""
+
+    def __init__(self, layout, h, w, y, x):
+        super(List, self).__init__(layout, h, w, y, x)
+
+    def callback_focus(self):
+        pass
+
+    def callback_select(self):
+        pass
+
+    def additem(self):
+        pass
+
+    def scrollbar(self):
+        pass
