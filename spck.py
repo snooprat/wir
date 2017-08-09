@@ -69,6 +69,11 @@ def _align_text(text, nrows, ncols, v_align, h_align, ignore=IGNORE_CH):
     return result
 
 
+def _call_if_ok(func, *args, **kwds):
+    if func is not None:
+        func(*args, **kwds)
+
+
 def add_color(color_number, fg, bg, attr=curses.A_NORMAL):
     curses.init_pair(color_number, fg, bg)
     return curses.color_pair(color_number) | attr
@@ -87,7 +92,7 @@ def run():
     while True:
         top_layout = curses.panel.top_panel().userptr()
         ch = top_layout.win.getch()
-        top_layout.callback_keys(ch)
+        top_layout.on_keypress(ch)
 
 
 class Layout(object):
@@ -103,9 +108,10 @@ class Layout(object):
         self.panel = cpanel.new_panel(self.win)
         self.panel.set_userptr(self)
         self._need_refresh = False
+        self.callback_keypress = None
 
-    def callback_keys(self, ch):
-        pass
+    def on_keypress(self, ch):
+        _call_if_ok(self.callback_keypress, ch)
 
     def show(self):
         self.refresh()
@@ -168,15 +174,15 @@ class Label(Widget):
 
     def __init__(self, layout, h, w, y, x):
         # run parent class init function.
-        super(Label, self).__init__(layout, h, w, y, x)
+        super().__init__(layout, h, w, y, x)
         self._text = ''
         self._h_align = 0
         self._v_align = 0
         self._attr = 0
         self._is_focused = False
         self.focus_color = curses.A_REVERSE
-        self.focus_pad = None
-        self.origin_pad = None
+        self._focus_pad = None
+        self._origin_pad = None
 
     def update(self, label=None, attr=None, v_align=None, h_align=None):
         """Update Label status"""
@@ -189,20 +195,20 @@ class Label(Widget):
         self.refresh()
 
     def _init_origin_pad(self):
-        if self.origin_pad is None:
-            self.origin_pad = curses.newpad(self._h, self._w)
+        if self._origin_pad is None:
+            self._origin_pad = curses.newpad(self._h, self._w)
             maxrow = self._h - 1
             maxcol = self._w - 1
-            self.win.overwrite(self.origin_pad, 0, 0, 0, 0, maxrow, maxcol)
+            self.win.overwrite(self._origin_pad, 0, 0, 0, 0, maxrow, maxcol)
 
     def _init_focus_pad(self):
-        if self.focus_pad is None:
-            self.focus_pad = curses.newpad(self._h, self._w)
+        if self._focus_pad is None:
+            self._focus_pad = curses.newpad(self._h, self._w)
             maxrow = self._h - 1
             maxcol = self._w - 1
-            self.win.overwrite(self.focus_pad, 0, 0, 0, 0, maxrow, maxcol)
+            self.win.overwrite(self._focus_pad, 0, 0, 0, 0, maxrow, maxcol)
             for y in range(self._h):
-                self.focus_pad.chgat(y, 0, self.focus_color)
+                self._focus_pad.chgat(y, 0, self.focus_color)
 
     @property
     def is_focused(self):
@@ -217,23 +223,60 @@ class Label(Widget):
         if value and not self._is_focused:
             self._init_origin_pad()
             self._init_focus_pad()
-            if self.focus_pad is not None:
+            if self._focus_pad is not None:
                 self.win.clear()
-                self.focus_pad.overwrite(self.win, 0, 0, 0, 0, maxrow, maxcol)
+                self._focus_pad.overwrite(self.win, 0, 0, 0, 0, maxrow, maxcol)
             self.refresh()
         elif not value and self._is_focused:
-            if self.origin_pad is not None:
+            if self._origin_pad is not None:
                 self.win.clear()
-                self.origin_pad.overlay(self.win, 0, 0, 0, 0, maxrow, maxcol)
+                self._origin_pad.overlay(self.win, 0, 0, 0, 0, maxrow, maxcol)
             self.refresh()
         self._is_focused = value
+
+
+class Button(object):
+    """A simple Button"""
+
+    def __init__(self, layout, h, w, y, x):
+        self.label = Label(layout, h, w, y, x)
+        self.pre_btn = None
+        self.next_btn = None
+        self.key = None
+        self.id = None
+        self.callback_select = None
+        self.callback_enter = None
+
+    def on_select(self):
+        _call_if_ok(self.callback_select)
+
+    def on_enter(self):
+        if self.callback_enter is not None:
+            self.callback_enter()
+
+
+class List(Widget):
+    """A simple List"""
+
+    def __init__(self, layout, h, w, y, x):
+        super().__init__(layout, h, w, y, x)
+        self.current_item = None
+
+    def additem(self, data):
+        pass
+
+    def clearitem(self):
+        pass
+
+    def scrollbar(self):
+        pass
 
 
 class Map(Widget):
     """A simple Map"""
 
     def __init__(self, layout, h, w, y, x, maph, mapw):
-        super(Map, self).__init__(layout, h, w, y, x)
+        super().__init__(layout, h, w, y, x)
         self._maph = maph
         self._mapw = mapw
         self._mapdrawy = 0
@@ -245,23 +288,4 @@ class Map(Widget):
         pass
 
     def move_map(self):
-        pass
-
-
-class List(Widget):
-    """A simple List"""
-
-    def __init__(self, layout, h, w, y, x):
-        super(List, self).__init__(layout, h, w, y, x)
-
-    def callback_focus(self):
-        pass
-
-    def callback_select(self):
-        pass
-
-    def additem(self):
-        pass
-
-    def scrollbar(self):
         pass

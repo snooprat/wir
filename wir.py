@@ -57,8 +57,8 @@ def display_menu(stdscr, WINHW):
         else:
             pass
 
-    title.callback_keys = run
-    logo.callback_keys = logorun
+    title.callback_keypress = run
+    logo.callback_keypress = logorun
     spck.run()
 
 
