@@ -2,7 +2,9 @@
 # A curses-based version of war in russia.
 
 import curses
+
 import spck
+from spck.view import Layout
 
 
 def display_menu(stdscr, WINHW):
@@ -10,19 +12,22 @@ def display_menu(stdscr, WINHW):
     MENU_H = 0
     stdscr.clear()
 
-    COLOR_HL = spck.add_color(
-        1,
-        curses.COLOR_YELLOW,
-        curses.COLOR_BLACK,
-        curses.A_BOLD)
+    c_hl = {
+        'id': 1,
+        'fg': curses.COLOR_YELLOW,
+        'bg': curses.COLOR_BLACK,
+        'attr': curses.A_BOLD,
+    }
 
-    title = spck.Layout(WIN_H-MENU_H, WIN_W)
+    COLOR_HL = spck.add_color(c_hl)
+
+    title = Layout(WIN_H-MENU_H, WIN_W)
     title.win.addch(curses.ACS_PI)
     title.win.addstr(4, 20, '12345')
     title.win.hline('h', 5)
     title.win.vline('v', 5)
     # title.newlabel('War in Russia\nv0.0.1')
-    logo = spck.Layout(WIN_H, WIN_W)
+    logo = Layout(WIN_H, WIN_W)
     bg = logo.newlabel(WIN_H, WIN_W)
     bg.win.border()
     tt = logo.newlabel(WIN_H-MENU_H-2, WIN_W-2, 1, 1)

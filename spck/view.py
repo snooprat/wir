@@ -1,21 +1,10 @@
-# A simple py curses toolkit
-
 import curses
 import curses.panel as cpanel
 
-
-# Constants
-V_TOP = 1
-V_MIDDLE = 2
-V_BOTTOM = 3
-H_LEFT = 4
-H_CENTER = 5
-H_RIGHT = 6
-
-IGNORE_CH = '`'
+import spck
 
 
-def _split_text(text, nrows, ncols, ignore=IGNORE_CH):
+def _split_text(text, nrows, ncols, ignore=spck.IGNORE_CH):
     """Split text in lines"""
     lines = text.splitlines()
     result = []
@@ -42,25 +31,25 @@ def _split_text(text, nrows, ncols, ignore=IGNORE_CH):
     return result
 
 
-def _align_text(text, nrows, ncols, v_align, h_align, ignore=IGNORE_CH):
+def _align_text(text, nrows, ncols, v_align, h_align, ignore=spck.IGNORE_CH):
     """Align text"""
     lines = _split_text(text, nrows, ncols, ignore)
     lines_num = len(lines)
     result = []
     # Vertical align
-    if v_align is V_MIDDLE:
+    if v_align is spck.V_MIDDLE:
         lines_add = (nrows-lines_num) // 2
-    elif v_align is V_BOTTOM:
+    elif v_align is spck.V_BOTTOM:
         lines_add = (nrows-lines_num)
     else:
         lines_add = 0
     v_aligned_lines = [''] * lines_add
     v_aligned_lines.extend(lines)
     # Horizontal align
-    if h_align is H_CENTER:
+    if h_align is spck.H_CENTER:
         for l in v_aligned_lines:
             result.append(l.center(ncols+l.count(ignore)))
-    elif h_align is H_RIGHT:
+    elif h_align is spck.H_RIGHT:
         for l in v_aligned_lines:
             result.append(l.rjust(ncols+l.count(ignore)))
     else:
@@ -72,27 +61,6 @@ def _align_text(text, nrows, ncols, v_align, h_align, ignore=IGNORE_CH):
 def _call_if_ok(func, *args, **kwds):
     if func is not None:
         func(*args, **kwds)
-
-
-def add_color(color_number, fg, bg, attr=curses.A_NORMAL):
-    curses.init_pair(color_number, fg, bg)
-    return curses.color_pair(color_number) | attr
-
-
-def update():
-    """Update screen display"""
-    top_layout = curses.panel.top_panel().userptr()
-    top_layout.refresh()
-    cpanel.update_panels()
-    curses.doupdate()
-
-
-def run():
-    """Run the top layout's function."""
-    while True:
-        top_layout = curses.panel.top_panel().userptr()
-        ch = top_layout.win.getch()
-        top_layout.on_keypress(ch)
 
 
 class Layout(object):
@@ -144,7 +112,7 @@ class Widget(object):
         self._x = x
         self.win = layout.pad.derwin(h, w, y, x)
         self.hl_color = curses.A_BOLD
-        self.hl_mark = IGNORE_CH
+        self.hl_mark = spck.IGNORE_CH
 
     def addhstr(self, str, y=None, x=None, attr=0):
         text = str.split(self.hl_mark)
