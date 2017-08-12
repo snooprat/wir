@@ -97,7 +97,7 @@ class Layout(object):
         # Pass object default value
         h = self._h if h is None else h
         w = self._w if w is None else w
-        return Label(self, h, w, y, x)
+        return LabelView(self, h, w, y, x)
 
 
 class Widget(object):
@@ -137,7 +137,7 @@ class Widget(object):
         self.win.clear()
 
 
-class Label(Widget):
+class LabelView(Widget):
     """A simple Label"""
 
     def __init__(self, layout, h, w, y, x):
@@ -203,11 +203,11 @@ class Label(Widget):
         self._is_focused = value
 
 
-class Button(object):
+class ButtonView(object):
     """A simple Button"""
 
     def __init__(self, layout, h, w, y, x):
-        self.label = Label(layout, h, w, y, x)
+        self.label = LabelView(layout, h, w, y, x)
         self.pre_btn = None
         self.next_btn = None
         self.key = None
@@ -223,7 +223,7 @@ class Button(object):
             self.callback_enter()
 
 
-class List(Widget):
+class ListView(Widget):
     """A simple List"""
 
     def __init__(self, layout, h, w, y, x):
@@ -240,7 +240,7 @@ class List(Widget):
         pass
 
 
-class Map(Widget):
+class MapView(Widget):
     """A simple Map"""
 
     def __init__(self, layout, h, w, y, x, maph, mapw):
