@@ -58,7 +58,7 @@ def _align_text(text, nrows, ncols, v_align, h_align, ignore=spck.IGNORE_CH):
     return result
 
 
-def _call_if_ok(func, *args, **kwds):
+def _run_if_exist(func, *args, **kwds):
     if func is not None:
         func(*args, **kwds)
 
@@ -79,7 +79,7 @@ class Layout(object):
         self.callback_keypress = None
 
     def on_keypress(self, ch):
-        _call_if_ok(self.callback_keypress, ch)
+        _run_if_exist(self.callback_keypress, ch)
 
     def show(self):
         self.refresh()
@@ -203,24 +203,31 @@ class LabelView(Widget):
         self._is_focused = value
 
 
-class ButtonView(object):
+class ButtonView(LabelView):
     """A simple Button"""
 
     def __init__(self, layout, h, w, y, x):
-        self.label = LabelView(layout, h, w, y, x)
+        super().__init__(layout, h, w, y, x)
         self.pre_btn = None
         self.next_btn = None
-        self.key = None
-        self.id = None
+        self._is_selected = False
         self.callback_select = None
         self.callback_enter = None
 
-    def on_select(self):
-        _call_if_ok(self.callback_select)
+    @property
+    def is_selected(self):
+        return self._is_selected
+
+    @is_selected.setter
+    def is_selected(self, value):
+        if value:
+            self.is_focused = True
+            _run_if_exist(self.callback_select)
+        else:
+            self.is_focused = False
 
     def on_enter(self):
-        if self.callback_enter is not None:
-            self.callback_enter()
+        _run_if_exist(self.callback_enter)
 
 
 class ListView(Widget):
