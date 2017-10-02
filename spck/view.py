@@ -101,7 +101,8 @@ class Layout(object):
 
 
 class Widget(object):
-    """A Widget is a re-usable component that can be used to create a simple GUI.
+    """A Widget is a re-usable component that can be used to create a simple
+    GUI.
     """
 
     def __init__(self, layout, h, w, y, x):
