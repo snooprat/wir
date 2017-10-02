@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# A curses-based version of war in russia.
+# A curses-based version of War in Russia.
 
 import curses
 
