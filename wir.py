@@ -13,29 +13,33 @@ def display_menu(stdscr, WINHW):
     stdscr.clear()
 
     c_hl = {
-        'id': 1,
+        'cid': 1,
         'fg': curses.COLOR_YELLOW,
         'bg': curses.COLOR_BLACK,
         'attr': curses.A_BOLD,
     }
 
-    COLOR_HL = spck.add_color(c_hl)
+    l_title = {
+        'label': '`War in Russia`\nv0.0.1',
+        'v_align': spck.V_MIDDLE,
+        'h_align': spck.H_CENTER,
+    }
+
+    COLOR_HL = spck.add_color(**c_hl)
 
     title = Layout(WIN_H-MENU_H, WIN_W)
     title.win.addch(curses.ACS_PI)
     title.win.addstr(4, 20, '12345')
     title.win.hline('h', 5)
     title.win.vline('v', 5)
-    # title.newlabel('War in Russia\nv0.0.1')
     logo = Layout(WIN_H, WIN_W)
     bg = logo.newlabel(WIN_H, WIN_W)
     bg.win.border()
     tt = logo.newlabel(WIN_H-MENU_H-2, WIN_W-2, 1, 1)
     tt.hl_color = COLOR_HL
-    tt.update(
-        '`War in Russia`\nv0.0.1',
-        v_align=spck.V_MIDDLE,
-        h_align=spck.H_CENTER)
+    tt.update(**l_title)
+    btn1 = logo.newbutton(1, 10, WIN_H-1, 10)
+    btn1.update('New Game', h_align=spck.H_RIGHT)
     logo.hide()
     spck.update()
 

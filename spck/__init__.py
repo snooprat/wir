@@ -13,19 +13,11 @@ H_RIGHT = 6
 
 IGNORE_CH = '`'
 
-_C_ID = 'id'
-_C_FG = 'fg'
-_C_BG = 'bg'
-_C_ATTR = 'attr'
 
-
-def add_color(color):
-    color_number = color.get(_C_ID)
-    fg = color.get(_C_FG) if color.get(_C_FG) else curses.COLOR_WHITE
-    bg = color.get(_C_BG) if color.get(_C_BG) else curses.COLOR_BLACK
-    attr = color.get(_C_ATTR) if color.get(_C_ATTR) else curses.A_NORMAL
-    curses.init_pair(color_number, fg, bg)
-    return curses.color_pair(color_number) | attr
+def add_color(cid, fg=curses.COLOR_WHITE, bg=curses.COLOR_BLACK,
+              attr=curses.A_NORMAL):
+    curses.init_pair(cid, fg, bg)
+    return curses.color_pair(cid) | attr
 
 
 def update():

@@ -46,6 +46,7 @@ def _align_text(text, nrows, ncols, v_align, h_align, ignore=spck.IGNORE_CH):
     v_aligned_lines = [''] * lines_add
     v_aligned_lines.extend(lines)
     # Horizontal align
+    ncols = ncols - 1  # fix last space cannot addstr issue.
     if h_align is spck.H_CENTER:
         for l in v_aligned_lines:
             result.append(l.center(ncols+l.count(ignore)))
@@ -99,9 +100,13 @@ class Layout(object):
         w = self._w if w is None else w
         return LabelView(self, h, w, y, x)
 
+    def newbutton(self, h, w, y=0, x=0):
+        return ButtonView(self, h, w, y, x)
+
 
 class Widget(object):
-    """A Widget is a re-usable component that can be used to create a simple
+    """
+    A Widget is a re-usable component that can be used to create a simple
     GUI.
     """
 
@@ -209,8 +214,11 @@ class ButtonView(LabelView):
 
     def __init__(self, layout, h, w, y, x):
         super().__init__(layout, h, w, y, x)
-        self.pre_btn = None
-        self.next_btn = None
+        self.update(h_align=spck.H_CENTER)
+        self.btn_l = None
+        self.btn_r = None
+        self.btn_u = None
+        self.btn_d = None
         self._is_selected = False
         self.callback_select = None
         self.callback_enter = None
@@ -230,6 +238,23 @@ class ButtonView(LabelView):
     def on_enter(self):
         _run_if_exist(self.callback_enter)
 
+    def _next_btn(self, btn):
+        if btn:
+            self.is_selected = False
+            self.btn.is_selected = True
+
+    def go_left(self):
+        self._next_btn(self.btn_l)
+
+    def go_right(self):
+        self._next_btn(self.btn_r)
+
+    def go_up(self):
+        self._next_btn(self.btn_u)
+
+    def go_down(self):
+        self._next_btn(self.btn_d)
+
 
 class ListView(Widget):
     """A simple List"""
@@ -242,9 +267,6 @@ class ListView(Widget):
         pass
 
     def clearitem(self):
-        pass
-
-    def scrollbar(self):
         pass
 
 
@@ -265,3 +287,7 @@ class MapView(Widget):
 
     def move_map(self):
         pass
+
+
+class TabView(Widget):
+    pass
