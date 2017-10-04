@@ -22,8 +22,6 @@ def add_color(cid, fg=curses.COLOR_WHITE, bg=curses.COLOR_BLACK,
 
 def update():
     """Update screen display"""
-    top_layout = curses.panel.top_panel().userptr()
-    top_layout.refresh()
     cpanel.update_panels()
     curses.doupdate()
 

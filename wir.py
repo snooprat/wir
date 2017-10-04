@@ -34,11 +34,11 @@ def display_menu(stdscr, WINHW):
     title.win.vline('v', 5)
     logo = Layout(WIN_H, WIN_W)
     bg = logo.newlabel(WIN_H, WIN_W)
-    bg.win.border()
+    bg.pad.border()
     tt = logo.newlabel(WIN_H-MENU_H-2, WIN_W-2, 1, 1)
     tt.hl_color = COLOR_HL
     tt.update(**l_title)
-    btn1 = logo.newbutton(1, 10, WIN_H-1, 10)
+    btn1 = logo.newbutton(1, 10, 0, 1)
     btn1.update('New Game', h_align=spck.H_RIGHT)
     logo.hide()
     spck.update()
