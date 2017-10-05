@@ -63,6 +63,13 @@ def _run_if_exist(func, *args, **kwds):
         func(*args, **kwds)
 
 
+def _all_none(*args):
+    for arg in args:
+        if arg is not None:
+            return False
+    return True
+
+
 class Layout(object):
     """A Layout is a display area."""
 
@@ -74,7 +81,6 @@ class Layout(object):
         self.win = curses.newwin(h, w, y, x)
         self.panel = cpanel.new_panel(self.win)
         self.panel.set_userptr(self)
-        self._need_refresh = False
         self.callback_keypress = None
 
     def on_keypress(self, ch):
@@ -113,7 +119,7 @@ class Widget(object):
         self.hl_mark = spck.IGNORE_CH
 
     def _newpad(self, h, w):
-        return curses.newpad(h+1, w)
+        return curses.newpad(h+1, w)  # +1 to fix last space cannot addstr.
 
     def addhstr(self, str, y=None, x=None, attr=0):
         text = str.split(self.hl_mark)
@@ -133,11 +139,11 @@ class Widget(object):
 
     def refresh(self, pad=None):
         pad = self.pad if pad is None else pad
-        pad.overwrite(self.layout.win, 0, 0, self._y, self._x, self._h-1,
-                      self._w-1)
-
-    def clear(self):
-        self.pad.clear()
+        y = self._y
+        x = self._x
+        maxrows = y + self._h - 1
+        maxcols = x + self._w - 1
+        pad.overwrite(self.layout.win, 0, 0, y, x, maxrows, maxcols)
 
 
 class LabelView(Widget):
@@ -156,12 +162,13 @@ class LabelView(Widget):
 
     def update(self, label=None, attr=None, v_align=None, h_align=None):
         """Update Label status"""
-        label = self._text if label is None else label
-        attr = self._attr if attr is None else attr
-        v_align = self._v_align if v_align is None else v_align
-        h_align = self._h_align if h_align is None else h_align
-        self.clear()
-        self.addwstr(label, attr, v_align, h_align)
+        if not _all_none(label, attr, v_align, h_align):
+            self._text = self._text if label is None else label
+            self._attr = self._attr if attr is None else attr
+            self._v_align = self._v_align if v_align is None else v_align
+            self._h_align = self._h_align if h_align is None else h_align
+            self.pad.clear()
+            self.addwstr(self._text, self._attr, self._v_align, self._h_align)
         self.refresh()
 
     def _init_focus_pad(self):

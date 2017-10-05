@@ -35,10 +35,11 @@ def display_menu(stdscr, WINHW):
     logo = Layout(WIN_H, WIN_W)
     bg = logo.newlabel(WIN_H, WIN_W)
     bg.pad.border()
+    bg.refresh()
     tt = logo.newlabel(WIN_H-MENU_H-2, WIN_W-2, 1, 1)
     tt.hl_color = COLOR_HL
     tt.update(**l_title)
-    btn1 = logo.newbutton(1, 10, 0, 1)
+    btn1 = logo.newbutton(1, 10, WIN_H-1, 10)
     btn1.update('New Game', h_align=spck.H_RIGHT)
     logo.hide()
     spck.update()
@@ -60,8 +61,10 @@ def display_menu(stdscr, WINHW):
                 logo.hide()
             if c is '2':
                 tt.is_focused = True
+                btn1.update(h_align=spck.H_LEFT)
             if c is '3':
                 tt.is_focused = False
+                btn1.update(h_align=spck.H_RIGHT)
             spck.update()
         else:
             pass
