@@ -98,6 +98,12 @@ class Layout(object):
         w = self._w if w is None else w
         return LabelView(self, h, w, y, x)
 
+    def newbox(self, h=None, w=None, y=0, x=0):
+        h = self._h if h is None else h
+        w = self._w if w is None else w
+        box = self.win.derwin(h, w, y, x)
+        box.border()
+
     def newbutton(self, h, w, y=0, x=0):
         return ButtonView(self, h, w, y, x)
 

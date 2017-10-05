@@ -33,9 +33,7 @@ def display_menu(stdscr, WINHW):
     title.win.hline('h', 5)
     title.win.vline('v', 5)
     logo = Layout(WIN_H, WIN_W)
-    bg = logo.newlabel(WIN_H, WIN_W)
-    bg.pad.border()
-    bg.refresh()
+    logo.newbox()
     tt = logo.newlabel(WIN_H-MENU_H-2, WIN_W-2, 1, 1)
     tt.hl_color = COLOR_HL
     tt.update(**l_title)
