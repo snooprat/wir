@@ -143,13 +143,14 @@ class Widget(object):
         for i, text in enumerate(lines):
             self.addhstr(text, i, 0, attr)
 
-    def refresh(self, pad=None):
+    def refresh(self, pad=None, win=None):
         pad = self.pad if pad is None else pad
+        win = self.layout.win if win is None else win
         y = self._y
         x = self._x
         maxrows = y + self._h - 1
         maxcols = x + self._w - 1
-        pad.overwrite(self.layout.win, 0, 0, y, x, maxrows, maxcols)
+        pad.overwrite(win, 0, 0, y, x, maxrows, maxcols)
 
 
 class LabelView(Widget):
@@ -250,10 +251,21 @@ class ListView(Widget):
 
     def __init__(self, layout, h, w, y, x):
         super().__init__(layout, h, w, y, x)
-        self.current_item = None
+        self.head = None
+        self.current = None
+        self.len = 0
 
     def additem(self, data):
-        pass
+        if self.len < self._h:
+            newitem = ButtonView(self.layout, 1, self._w, self.len, 0)
+            if self.head is None:
+                self.head = newitem
+            else:
+                item = self.head
+                while item.btn_d is not None:
+                    item = item.btn_d
+                item.btn_d = newitem
+                newitem.btn_u = item
 
     def clearitem(self):
         pass
