@@ -1,7 +1,7 @@
 # A simple py curses toolkit
 
-import curses
-import curses.panel as cpanel
+import spck.scurses as curses
+import spck.panel as cpanel
 
 # Constants
 V_TOP = 1
@@ -29,6 +29,6 @@ def update():
 def run():
     """Run the top layout's function."""
     while True:
-        top_layout = curses.panel.top_panel().userptr()
+        top_layout = cpanel.top_panel().userptr()
         ch = top_layout.win.getch()
         top_layout.on_keypress(ch)
