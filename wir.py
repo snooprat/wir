@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # A curses-based version of War in Russia.
 
-import curses
-
 import spck
+import spck.scurses as curses
 from spck.view import Layout
 
 
