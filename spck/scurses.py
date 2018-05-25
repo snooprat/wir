@@ -278,8 +278,9 @@ use_env = uc.use_env
 class WinObj(object):
     """window object from curses."""
 
-    def __init__(self, scr):
+    def __init__(self, scr, is_pad=False):
         self.scr = scr
+        self.is_pad = is_pad
 
     def __del__(self):
         return uc.delwin(self.scr)
@@ -345,15 +346,15 @@ class WinObj(object):
     def deleteln(self, *args, **kwds):
         return self._overload(args, kwds, 0, uc.wdeleteln, uc.mvwdeleteln)
 
-    def _dw_2args(self, begin_y, begin_x):
+    def _sw_2args(self, func, begin_y, begin_x):
         ml, mc = self.getmaxyx()
         nl = ml - begin_y
         nc = mc - begin_x
-        return WinObj(uc.derwin(self.scr, nl, nc, begin_y, begin_x))
+        return WinObj(func(self.scr, nl, nc, begin_y, begin_x))
 
     def derwin(self, *args, **kwds):
         if len(args) + len(kwds) <= 2:
-            return self._dw_2args(*args, **kwds)
+            return self._sw_2args(uc.derwin, *args, **kwds)
         else:
             return WinObj(uc.derwin(self.scr, *args, **kwds))
 
@@ -488,7 +489,10 @@ class WinObj(object):
         return uc.redrawwin(self.scr, *args, **kwds)
 
     def refresh(self, *args, **kwds):
-        return uc.wrefresh(self.scr, *args, **kwds)
+        if self.is_pad:
+            return uc.prefresh(self.scr, *args, **kwds)
+        else:
+            return uc.wrefresh(self.scr, *args, **kwds)
 
     def scroll(self, *args, **kwds):
         return uc.wscrl(self.scr, *args, **kwds)
@@ -505,11 +509,17 @@ class WinObj(object):
     def standout(self, *args, **kwds):
         return uc.wstandout(self.scr, *args, **kwds)
 
-    def subpad(self, *args, **kwds):  # TODO like derwin, 2 funcs
-        return PadObj(uc.subpad(self.scr, *args, **kwds))
+    def subpad(self, *args, **kwds):
+        if len(args) + len(kwds) <= 2:
+            return self._sw_2args(uc.subpad, *args, **kwds)
+        else:
+            return WinObj(uc.subpad(self.scr, *args, **kwds))
 
-    def subwin(self, *args, **kwds):  # TODO like derwin, 2 funcs
-        return WinObj(uc.subwin(self.scr, *args, **kwds))
+    def subwin(self, *args, **kwds):
+        if len(args) + len(kwds) <= 2:
+            return self._sw_2args(uc.subwin, *args, **kwds)
+        else:
+            return WinObj(uc.subwin(self.scr, *args, **kwds))
 
     def syncdown(self, *args, **kwds):
         return uc.wsyncdown(self.scr, *args, **kwds)
@@ -536,12 +546,6 @@ class WinObj(object):
         return self._overload(args, kwds, 2, uc.wvline, uc.mvwvline)
 
 
-class PadObj(WinObj):
-    """Pad object from curses"""
-    def refresh(self, *args, **kwds):
-        return uc.prefresh(self.scr, *args, **kwds)
-
-
 # Wrapper function
 def initscr():
     stdscr = uc.initscr()
@@ -549,7 +553,7 @@ def initscr():
 
 
 def newpad(*args, **kwds):
-    return PadObj(uc.newpad(*args, **kwds))
+    return WinObj(uc.newpad(*args, **kwds), True)
 
 
 def newwin(*args, **kwds):
