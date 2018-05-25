@@ -226,6 +226,9 @@ erasechar = uc.erasechar
 filter = uc.filter
 flash = uc.flash
 flushinp = uc.flushinp
+getmouse = uc.getmouse
+getsyx = uc.getsyx
+getwin = uc.getwin
 halfdelay = uc.halfdelay
 has_colors = uc.has_colors
 has_ic = uc.has_ic
@@ -237,12 +240,12 @@ isendwin = uc.isendwin
 keyname = uc.keyname
 killchar = uc.killchar
 longname = uc.longname
+meta = uc.meta
 mouseinterval = uc.mouseinterval
 mousemask = uc.mousemask
 napms = uc.napms
 nl = uc.nl
 nocbreak = uc.nocbreak
-nodelay = uc.nodelay
 noecho = uc.noecho
 nonl = uc.nonl
 noqiflush = uc.noqiflush
@@ -267,7 +270,6 @@ typeahead = uc.typeahead
 unctrl = uc.unctrl
 ungetch = uc.ungetch
 ungetmouse = uc.ungetmouse
-untouchwin = uc.untouchwin
 use_default_colors = uc.use_default_colors
 use_env = uc.use_env
 
@@ -304,6 +306,9 @@ class WinObj(object):
     def attron(self, *args, **kwds):
         return uc.wattron(self.scr, *args, **kwds)
 
+    def attrset(self, *args, **kwds):
+        return uc.wattrset(self.scr, *args, **kwds)
+
     def bkgd(self, *args, **kwds):
         return uc.wbkgd(self.scr, *args, **kwds)
 
@@ -316,7 +321,7 @@ class WinObj(object):
     def box(self, *args, **kwds):
         return uc.box(self.scr, *args, **kwds)
 
-    def chgat(self, *args, **kwds):
+    def chgat(self, *args, **kwds):  # TODO many args changes
         return self._overload(args, kwds, 4, uc.wchgat, uc.mvwchgat)
 
     def clear(self, *args, **kwds):
@@ -356,7 +361,7 @@ class WinObj(object):
         return uc.wechochar(self.scr, *args, **kwds)
 
     def enclose(self, *args, **kwds):
-        return uc.enclose(self.scr, *args, **kwds)
+        return uc.wenclose(self.scr, *args, **kwds)
 
     def erase(self, *args, **kwds):
         return uc.werase(self.scr, *args, **kwds)
@@ -373,20 +378,11 @@ class WinObj(object):
     def getmaxyx(self, *args, **kwds):
         return uc.getmaxyx(self.scr, *args, **kwds)
 
-    def getmouse(self, *args, **kwds):
-        return uc.getmouse(self.scr, *args, **kwds)
-
     def getparyx(self, *args, **kwds):
         return uc.getparyx(self.scr, *args, **kwds)
 
-    def getstr(self, *args, **kwds):
+    def getstr(self, *args, **kwds):  # TODO do not supprt argument 'n'
         return self._overload(args, kwds, 0, uc.wgetstr, uc.mvwgetstr)
-
-    def getsyx(self, *args, **kwds):
-        return uc.getsyx(self.scr, *args, **kwds)
-
-    def getwin(self, *args, **kwds):
-        return uc.getwin(self.scr, *args, **kwds)
 
     def getyx(self, *args, **kwds):
         return uc.getyx(self.scr, *args, **kwds)
@@ -436,9 +432,6 @@ class WinObj(object):
     def leaveok(self, *args, **kwds):
         return uc.leaveok(self.scr, *args, **kwds)
 
-    def meta(self, *args, **kwds):
-        return uc.meta(self.scr, *args, **kwds)
-
     def move(self, *args, **kwds):
         return uc.wmove(self.scr, *args, **kwds)
 
@@ -447,6 +440,9 @@ class WinObj(object):
 
     def mvwin(self, *args, **kwds):
         return uc.mvwin(self.scr, *args, **kwds)
+
+    def nodelay(self, *args, **kwds):
+        return uc.nodelay(self.scr, *args, **kwds)
 
     def notimeout(self, *args, **kwds):
         return uc.notimeout(self.scr, *args, **kwds)
@@ -509,10 +505,10 @@ class WinObj(object):
     def standout(self, *args, **kwds):
         return uc.wstandout(self.scr, *args, **kwds)
 
-    def subpad(self, *args, **kwds):
+    def subpad(self, *args, **kwds):  # TODO like derwin, 2 funcs
         return PadObj(uc.subpad(self.scr, *args, **kwds))
 
-    def subwin(self, *args, **kwds):
+    def subwin(self, *args, **kwds):  # TODO like derwin, 2 funcs
         return WinObj(uc.subwin(self.scr, *args, **kwds))
 
     def syncdown(self, *args, **kwds):
@@ -522,7 +518,7 @@ class WinObj(object):
         return uc.syncok(self.scr, *args, **kwds)
 
     def syncup(self, *args, **kwds):
-        return uc.syncup(self.scr, *args, **kwds)
+        return uc.wsyncup(self.scr, *args, **kwds)
 
     def timeout(self, *args, **kwds):
         return uc.wtimeout(self.scr, *args, **kwds)
@@ -532,6 +528,9 @@ class WinObj(object):
 
     def touchwin(self, *args, **kwds):
         return uc.touchwin(self.scr, *args, **kwds)
+
+    def untouchwin(self, *args, **kwds):
+        return uc.untouchwin(self.scr, *args, **kwds)
 
     def vline(self, *args, **kwds):
         return self._overload(args, kwds, 2, uc.wvline, uc.mvwvline)
