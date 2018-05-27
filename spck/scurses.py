@@ -322,8 +322,28 @@ class WinObj(object):
     def box(self, *args, **kwds):
         return uc.box(self.scr, *args, **kwds)
 
-    def chgat(self, *args, **kwds):  # TODO many args changes
-        return self._overload(args, kwds, 4, uc.wchgat, uc.mvwchgat)
+    def _chgat_1arg(self, attr):
+        return uc.wchgat(self.scr, -1, attr, 0)
+
+    def _chgat_2args(self, num, attr):
+        return uc.wchgat(self.scr, num, attr, 0)
+
+    def _chgat_3args(self, y, x, attr):
+        return uc.mvwchgat(self.scr, y, x, -1, attr, 0)
+
+    def _chgat_4args(self, y, x, num, attr):
+        return uc. mvwchgat(self.scr, y, x, num, attr, 0)
+
+    def chgat(self, *args, **kwds):
+        len_args = len(args) + len(kwds)
+        if len_args == 1:
+            return self._chgat_1arg(*args, **kwds)
+        elif len_args == 2:
+            return self._chgat_2args(*args, **kwds)
+        elif len_args == 3:
+            return self._chgat_3args(*args, **kwds)
+        else:
+            return self._chgat_4args(*args, **kwds)
 
     def clear(self, *args, **kwds):
         return uc.wclear(self.scr, *args, **kwds)
