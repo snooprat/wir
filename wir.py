@@ -2,7 +2,7 @@
 # A curses-based version of War in Russia.
 
 import spck
-import spck.scurses as curses
+import scurses as curses
 from spck.view import Layout
 
 

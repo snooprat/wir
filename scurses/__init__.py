@@ -1,6 +1,6 @@
 # scurses make unicurses more python native.
 
-import spck.unicurses as uc
+import scurses.unicurses as uc
 
 # +++ CONSTANTS +++
 

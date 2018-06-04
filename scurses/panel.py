@@ -1,6 +1,6 @@
 # scurses panel module.
 
-import spck.unicurses as uc
+import scurses.unicurses as uc
 
 
 # Panel functions

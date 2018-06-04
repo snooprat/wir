@@ -1,7 +1,7 @@
 # A simple py curses toolkit
 
-import spck.scurses as curses
-import spck.panel as cpanel
+import scurses as curses
+import scurses.panel as cpanel
 
 # Constants
 V_TOP = 1

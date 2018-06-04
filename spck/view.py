@@ -1,6 +1,6 @@
 import spck
-import spck.scurses as curses
-import spck.panel as cpanel
+import scurses as curses
+import scurses.panel as cpanel
 
 
 def _split_text(text, nrows, ncols, ignore=spck.IGNORE_CH):
