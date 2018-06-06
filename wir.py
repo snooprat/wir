@@ -35,9 +35,9 @@ def display_menu(stdscr, WINHW):
     logo.newbox()
     tt = logo.newlabel(WIN_H-MENU_H-2, WIN_W-2, 1, 1)
     tt.hl_color = COLOR_HL
-    tt.update(**l_title)
+    tt.set_text(**l_title)
     btn1 = logo.newbutton(1, 10, WIN_H-1, 10)
-    btn1.update('New Game', h_align=spck.H_RIGHT)
+    btn1.set_text('New Game')
     logo.hide()
     spck.update()
 
@@ -57,26 +57,26 @@ def display_menu(stdscr, WINHW):
             if c in 'Qq':
                 logo.hide()
             if c is '2':
-                tt.is_focused = True
-                btn1.update(h_align=spck.H_LEFT)
+                tt.set_focused(True)
+                btn1.set_text(h_align=spck.H_LEFT)
             if c is '3':
-                tt.is_focused = False
-                btn1.update(h_align=spck.H_RIGHT)
+                tt.set_focused(False)
+                btn1.set_text(h_align=spck.H_RIGHT)
             spck.update()
         else:
             pass
 
     title.callback_keypress = run
     logo.callback_keypress = logorun
-    spck.run()
 
 
 def main(stdscr):
     """Game main loop"""
     WINHW = stdscr.getmaxyx()
-
     curses.curs_set(0)
+
     display_menu(stdscr, WINHW)
+    spck.run()
 
 
 if __name__ == '__main__':

@@ -57,18 +57,6 @@ def _align_text(text, nrows, ncols, v_align, h_align, ignore=spck.IGNORE_CH):
     return result
 
 
-def _run_if_exist(func, *args, **kwds):
-    if func is not None:
-        func(*args, **kwds)
-
-
-def _all_none(*args):
-    for arg in args:
-        if arg is not None:
-            return False
-    return True
-
-
 class Layout(object):
     """A Layout is a display area."""
 
@@ -83,7 +71,10 @@ class Layout(object):
         self.callback_keypress = None
 
     def on_keypress(self, ch):
-        _run_if_exist(self.callback_keypress, ch)
+        try:
+            self.callback_keypress(ch)
+        except TypeError:
+            pass
 
     def show(self):
         self.panel.show()
@@ -102,6 +93,7 @@ class Layout(object):
         w = self._w if w is None else w
         box = self.win.derwin(h, w, y, x)
         box.border()
+        return box
 
     def newbutton(self, h, w, y=0, x=0):
         return ButtonView(self, h, w, y, x)
@@ -127,6 +119,7 @@ class Widget(object):
         return curses.newpad(h+1, w)  # +1 to fix last space cannot addstr.
 
     def addhstr(self, str, y=None, x=None, attr=0):
+        """highlight text"""
         text = str.split(self.hl_mark)
         for i, t in enumerate(text):
             if i == 0:
@@ -137,6 +130,7 @@ class Widget(object):
                 self.pad.addstr(t, self.hl_color)
 
     def addwstr(self, str, attr=0, v_align=0, h_align=0):
+        """add align text"""
         lines = _align_text(str, self._h, self._w, v_align, h_align,
                             self.hl_mark)
         for i, text in enumerate(lines):
@@ -163,39 +157,33 @@ class LabelView(Widget):
         self._v_align = 0
         self._attr = 0
         self._is_focused = False
-        self.focus_color = curses.A_REVERSE
-        self._focus_pad = None
+        self._focus_pad = self._newpad(self._h, self._w)
 
-    def update(self, label=None, attr=None, v_align=None, h_align=None):
-        """Update Label status"""
-        if not _all_none(label, attr, v_align, h_align):
-            self._text = self._text if label is None else label
-            self._attr = self._attr if attr is None else attr
-            self._v_align = self._v_align if v_align is None else v_align
-            self._h_align = self._h_align if h_align is None else h_align
-            self.pad.clear()
-            self.addwstr(self._text, self._attr, self._v_align, self._h_align)
-        self.refresh()
-
-    def _init_focus_pad(self):
-        if self._focus_pad is None:
-            self._focus_pad = self._newpad(self._h, self._w)
-            self.pad.overwrite(self._focus_pad)
-            for y in range(self._h):
-                self._focus_pad.chgat(y, 0, self.focus_color)
-
-    @property
-    def is_focused(self):
-        return self._is_focused
-
-    @is_focused.setter
-    def is_focused(self, value):
-        if value and not self._is_focused:
-            self._init_focus_pad()
+    def update(self):
+        if self._is_focused:
             self.refresh(self._focus_pad)
-        elif not value and self._is_focused:
+        else:
             self.refresh()
-        self._is_focused = value
+
+    def set_text(self, label=None, attr=None, v_align=None, h_align=None):
+        """Set Label text"""
+        self._text = self._text if label is None else label
+        self._attr = self._attr if attr is None else attr
+        self._v_align = self._v_align if v_align is None else v_align
+        self._h_align = self._h_align if h_align is None else h_align
+        # set normal text
+        self.pad.clear()
+        self.addwstr(self._text, self._attr, self._v_align, self._h_align)
+        # set focused text
+        self.pad.overwrite(self._focus_pad)
+        self._focus_pad.bkgd(curses.A_REVERSE)
+
+        self.update()
+
+    def set_focused(self, value):
+        if self._is_focused != value:
+            self._is_focused = value
+            self.update()
 
 
 class ButtonView(LabelView):
@@ -203,46 +191,21 @@ class ButtonView(LabelView):
 
     def __init__(self, layout, h, w, y, x):
         super().__init__(layout, h, w, y, x)
-        self.update(h_align=spck.H_CENTER)
-        self.btn_l = None
-        self.btn_r = None
-        self.btn_u = None
-        self.btn_d = None
+        self.set_text(h_align=spck.H_CENTER)
         self._is_selected = False
-        self.callback_select = None
-        self.callback_enter = None
 
-    @property
-    def is_selected(self):
-        return self._is_selected
-
-    @is_selected.setter
-    def is_selected(self, value):
+    def set_selected(self, value):
         if value:
-            self.is_focused = True
-            _run_if_exist(self.callback_select)
+            self.set_focused(True)
+            try:
+                self.callback_select()
+            except TypeError:
+                pass
         else:
-            self.is_focused = False
+            self.set_focused(False)
 
-    def on_enter(self):
-        _run_if_exist(self.callback_enter)
-
-    def _next_btn(self, btn):
-        if btn:
-            self.is_selected = False
-            self.btn.is_selected = True
-
-    def go_left(self):
-        self._next_btn(self.btn_l)
-
-    def go_right(self):
-        self._next_btn(self.btn_r)
-
-    def go_up(self):
-        self._next_btn(self.btn_u)
-
-    def go_down(self):
-        self._next_btn(self.btn_d)
+    def get_text(self):
+        return self._text
 
 
 class ListView(Widget):
