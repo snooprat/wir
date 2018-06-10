@@ -95,8 +95,8 @@ class Layout(object):
         box.border()
         return box
 
-    def newbutton(self, h, w, y=0, x=0):
-        return ButtonView(self, h, w, y, x)
+    def newbutton(self, h, w, y=0, x=0, text="Button"):
+        return ButtonView(self, h, w, y, x, text)
 
 
 class Widget(object):
@@ -156,8 +156,26 @@ class LabelView(Widget):
         self._h_align = 0
         self._v_align = 0
         self._attr = 0
+
+    def set_text(self, label=None, attr=None, v_align=None, h_align=None):
+        """Set Label text"""
+        self._text = self._text if label is None else label
+        self._attr = self._attr if attr is None else attr
+        self._v_align = self._v_align if v_align is None else v_align
+        self._h_align = self._h_align if h_align is None else h_align
+        self.pad.clear()
+        self.addwstr(self._text, self._attr, self._v_align, self._h_align)
+        self.refresh()
+
+
+class ButtonView(LabelView):
+    """A simple Button"""
+
+    def __init__(self, layout, h, w, y, x, text):
+        super().__init__(layout, h, w, y, x)
         self._is_focused = False
         self._focus_pad = self._newpad(self._h, self._w)
+        self.set_text(text, h_align=spck.H_CENTER)
 
     def update(self):
         if self._is_focused:
@@ -166,43 +184,15 @@ class LabelView(Widget):
             self.refresh()
 
     def set_text(self, label=None, attr=None, v_align=None, h_align=None):
-        """Set Label text"""
-        self._text = self._text if label is None else label
-        self._attr = self._attr if attr is None else attr
-        self._v_align = self._v_align if v_align is None else v_align
-        self._h_align = self._h_align if h_align is None else h_align
-        # set normal text
-        self.pad.clear()
-        self.addwstr(self._text, self._attr, self._v_align, self._h_align)
-        # set focused text
+        super().set_text(label, attr, v_align, h_align)
         self.pad.overwrite(self._focus_pad)
         self._focus_pad.bkgd(curses.A_REVERSE)
-
         self.update()
 
     def set_focused(self, value):
         if self._is_focused != value:
             self._is_focused = value
             self.update()
-
-
-class ButtonView(LabelView):
-    """A simple Button"""
-
-    def __init__(self, layout, h, w, y, x):
-        super().__init__(layout, h, w, y, x)
-        self.set_text(h_align=spck.H_CENTER)
-        self._is_selected = False
-
-    def set_selected(self, value):
-        if value:
-            self.set_focused(True)
-            try:
-                self.callback_select()
-            except TypeError:
-                pass
-        else:
-            self.set_focused(False)
 
     def get_text(self):
         return self._text

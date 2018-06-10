@@ -33,11 +33,11 @@ def display_menu(stdscr, WINHW):
     title.win.vline('v', 5)
     logo = Layout(WIN_H, WIN_W)
     logo.newbox()
-    tt = logo.newlabel(WIN_H-MENU_H-2, WIN_W-2, 1, 1)
+    tt = logo.newbutton(WIN_H-MENU_H-2, WIN_W-2, 1, 1)
     tt.hl_color = COLOR_HL
     tt.set_text(**l_title)
-    btn1 = logo.newbutton(1, 10, WIN_H-1, 10)
-    btn1.set_text('New Game')
+    # btn1 = logo.newbutton(1, 10, WIN_H-1, 10)
+    # btn1.set_text('New Game')
     logo.hide()
     spck.update()
 
@@ -58,10 +58,10 @@ def display_menu(stdscr, WINHW):
                 logo.hide()
             if c is '2':
                 tt.set_focused(True)
-                btn1.set_text(h_align=spck.H_LEFT)
+                # btn1.set_text(h_align=spck.H_LEFT)
             if c is '3':
                 tt.set_focused(False)
-                btn1.set_text(h_align=spck.H_RIGHT)
+                # btn1.set_text(h_align=spck.H_RIGHT)
             spck.update()
         else:
             pass
