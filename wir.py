@@ -2,8 +2,12 @@
 # A curses-based version of War in Russia.
 
 import spck
-import scurses as curses
 from spck.view import Layout
+
+if spck.NCURSES:
+    import curses
+else:
+    import scurses as curses
 
 
 def display_menu(stdscr, WINHW):
