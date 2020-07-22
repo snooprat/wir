@@ -1,15 +1,7 @@
 # A simple py curses toolkit
 
-global NCURSES
-NCURSES = False
-
-try:
-    import curses
-    import curses.panel as cpanel
-    NCURSES = True
-except ImportError:
-    import scurses as curses
-    import scurses.panel as cpanel
+import curses
+import curses.panel as cpanel
 
 # Constants
 V_TOP = 1

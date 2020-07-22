@@ -1,14 +1,10 @@
-import spck
+import spct
 
-if spck.NCURSES:
-    import curses
-    import curses.panel as cpanel
-else:
-    import scurses as curses
-    import scurses.panel as cpanel
+import curses
+import curses.panel as cpanel
 
 
-def _split_text(text, nrows, ncols, ignore=spck.IGNORE_CH):
+def _split_text(text, nrows, ncols, ignore=spct.IGNORE_CH):
     """Split text in lines"""
     lines = text.splitlines()
     result = []
@@ -35,25 +31,25 @@ def _split_text(text, nrows, ncols, ignore=spck.IGNORE_CH):
     return result
 
 
-def _align_text(text, nrows, ncols, v_align, h_align, ignore=spck.IGNORE_CH):
+def _align_text(text, nrows, ncols, v_align, h_align, ignore=spct.IGNORE_CH):
     """Align text"""
     lines = _split_text(text, nrows, ncols, ignore)
     lines_num = len(lines)
     result = []
     # Vertical align
-    if v_align is spck.V_MIDDLE:
+    if v_align is spct.V_MIDDLE:
         lines_add = (nrows-lines_num) // 2
-    elif v_align is spck.V_BOTTOM:
+    elif v_align is spct.V_BOTTOM:
         lines_add = (nrows-lines_num)
     else:
         lines_add = 0
     v_aligned_lines = [''] * lines_add
     v_aligned_lines.extend(lines)
     # Horizontal align
-    if h_align is spck.H_CENTER:
+    if h_align is spct.H_CENTER:
         for l in v_aligned_lines:
             result.append(l.center(ncols+l.count(ignore)))
-    elif h_align is spck.H_RIGHT:
+    elif h_align is spct.H_RIGHT:
         for l in v_aligned_lines:
             result.append(l.rjust(ncols+l.count(ignore)))
     else:
@@ -118,7 +114,7 @@ class Widget(object):
         self._x = x
         self.pad = self._newpad(h, w)
         self.hl_color = curses.A_BOLD
-        self.hl_mark = spck.IGNORE_CH
+        self.hl_mark = spct.IGNORE_CH
 
     def _newpad(self, h, w):
         return curses.newpad(h+1, w)  # +1 to fix last space cannot addstr.
@@ -180,7 +176,7 @@ class ButtonView(LabelView):
         super().__init__(layout, h, w, y, x)
         self._is_focused = False
         self._focus_pad = self._newpad(self._h, self._w)
-        self.set_text(text, h_align=spck.H_CENTER)
+        self.set_text(text, h_align=spct.H_CENTER)
 
     def update(self):
         if self._is_focused:

@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 # A curses-based version of War in Russia.
 
-import spck
-from spck.view import Layout
+import spct
+from spct.view import Layout
 
-if spck.NCURSES:
-    import curses
-else:
-    import scurses as curses
+import curses
 
 
 def display_menu(stdscr, WINHW):
@@ -24,11 +21,11 @@ def display_menu(stdscr, WINHW):
 
     l_title = {
         'label': '`War in Russia`\nv0.0.1',
-        'v_align': spck.V_MIDDLE,
-        'h_align': spck.H_CENTER,
+        'v_align': spct.V_MIDDLE,
+        'h_align': spct.H_CENTER,
     }
 
-    COLOR_HL = spck.add_color(**c_hl)
+    COLOR_HL = spct.add_color(**c_hl)
 
     title = Layout(WIN_H-MENU_H, WIN_W)
     title.win.addch(curses.ACS_PI)
@@ -43,14 +40,14 @@ def display_menu(stdscr, WINHW):
     # btn1 = logo.newbutton(1, 10, WIN_H-1, 10)
     # btn1.set_text('New Game')
     logo.hide()
-    spck.update()
+    spct.update()
 
     def run(ch):
         if 0 < ch < 256:
             c = chr(ch)
             if c in 'Qq':
                 exit()
-            if c is '1':
+            if c == '1':
                 logo.show()
         else:
             pass
@@ -60,13 +57,13 @@ def display_menu(stdscr, WINHW):
             c = chr(ch)
             if c in 'Qq':
                 logo.hide()
-            if c is '2':
+            if c == '2':
                 tt.set_focused(True)
-                # btn1.set_text(h_align=spck.H_LEFT)
-            if c is '3':
+                # btn1.set_text(h_align=spct.H_LEFT)
+            if c == '3':
                 tt.set_focused(False)
-                # btn1.set_text(h_align=spck.H_RIGHT)
-            spck.update()
+                # btn1.set_text(h_align=spct.H_RIGHT)
+            spct.update()
         else:
             pass
 
@@ -80,7 +77,7 @@ def main(stdscr):
     curses.curs_set(0)
 
     display_menu(stdscr, WINHW)
-    spck.run()
+    spct.run()
 
 
 if __name__ == '__main__':
