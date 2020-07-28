@@ -32,25 +32,26 @@ def _split_text(text, nrows, ncols, ignore=spct.CH_HIGHLIGHT):
     return result
 
 
-def _align_text(text, nrows, ncols, v_align, h_align, ignore=spct.CH_HIGHLIGHT):
+def _align_text(text, nrows, ncols, v_align, h_align,
+                ignore=spct.CH_HIGHLIGHT):
     """Align text"""
     lines = _split_text(text, nrows, ncols, ignore)
     lines_num = len(lines)
     result = []
     # Vertical align
-    if v_align is spct.A_MIDDLE:
+    if v_align is spct.AL_MIDDLE:
         lines_add = (nrows-lines_num) // 2
-    elif v_align is spct.A_BOTTOM:
+    elif v_align is spct.AL_BOTTOM:
         lines_add = (nrows-lines_num)
     else:
         lines_add = 0
     v_aligned_lines = [''] * lines_add
     v_aligned_lines.extend(lines)
     # Horizontal align
-    if h_align is spct.A_CENTER:
+    if h_align is spct.AL_CENTER:
         for l in v_aligned_lines:
             result.append(l.center(ncols+l.count(ignore)))
-    elif h_align is spct.A_RIGHT:
+    elif h_align is spct.AL_RIGHT:
         for l in v_aligned_lines:
             result.append(l.rjust(ncols+l.count(ignore)))
     else:
@@ -59,8 +60,8 @@ def _align_text(text, nrows, ncols, v_align, h_align, ignore=spct.CH_HIGHLIGHT):
     return result
 
 
-class Layout(object):
-    """A Layout is a display area."""
+class ViewLayout(object):
+    """A view layout is a display area to display widget."""
 
     def __init__(self, h, w, y=0, x=0):
         self._h = h
@@ -71,9 +72,17 @@ class Layout(object):
         self.panel = cpanel.new_panel(self.win)
         self.panel.set_userptr(self)
         self.viewctr = None
-        self.initview()
+        self.init_view()
 
-    def initview(self):
+    @property
+    def height(self):
+        return self._h
+
+    @property
+    def width(self):
+        return self._w
+
+    def init_view(self):
         pass
 
     def run_ctr(self):
@@ -129,7 +138,7 @@ class Widget(object):
         return curses.newpad(h+1, w)  # +1 to fix last space cannot addstr.
 
     def addhstr(self, str, y=None, x=None, attr=0):
-        """highlight text"""
+        """Add highlight text"""
         text = str.split(self.hl_mark)
         for i, t in enumerate(text):
             if i == 0:
@@ -140,7 +149,7 @@ class Widget(object):
                 self.pad.addstr(t, self.hl_color)
 
     def addwstr(self, str, attr=0, v_align=0, h_align=0):
-        """add align text"""
+        """Add align and hightlight text"""
         lines = _align_text(str, self._h, self._w, v_align, h_align,
                             self.hl_mark)
         for i, text in enumerate(lines):
@@ -185,7 +194,7 @@ class ButtonView(LabelView):
         super().__init__(layout, h, w, y, x)
         self._is_focused = False
         self._focus_pad = self._newpad(self._h, self._w)
-        self.set_text(text, h_align=spct.A_CENTER)
+        self.set_text(text, h_align=spct.AL_CENTER)
 
     def update(self):
         if self._is_focused:

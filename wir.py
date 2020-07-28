@@ -2,39 +2,40 @@
 # A curses-based version of War in Russia.
 
 import sys
-import curses
 
 import spct
+from spct.view import ViewLayout
+from spct.controller import ViewController
 
 
 c_hl = {
             'cid': 1,
-            'fg': curses.COLOR_YELLOW,
-            'bg': curses.COLOR_BLACK,
-            'attr': curses.A_BOLD,
+            'fg': spct.COLOR_YELLOW,
+            'bg': spct.COLOR_BLACK,
+            'attr': spct.A_BOLD,
         }
 
 l_title = {
-            'label': '`War in Russia`\nv0.0.1',
-            'v_align': spct.A_MIDDLE,
-            'h_align': spct.A_CENTER,
+            'label': '`W`ar `i`n `R`ussia\nv0.0.1',
+            'v_align': spct.AL_MIDDLE,
+            'h_align': spct.AL_CENTER,
             }
 
 
-class MainMenuView(spct.Layout):
+class MainMenuView(ViewLayout):
 
-    def initview(self):
-        self.win.addch(curses.ACS_PI)
+    def init_view(self):
+        self.win.addch('t')
         self.win.addstr(4, 20, '12345')
         self.win.hline('h', 5)
         self.win.vline('v', 5)
 
 
-class LogoView(spct.Layout):
+class LogoView(ViewLayout):
 
-    def initview(self):
+    def init_view(self):
         self.newbox()
-        self.tt = self.newbutton(self._h-2, self._w-2, 1, 1)
+        self.tt = self.newbutton(self.height-2, self.width-2, 1, 1)
         self.tt.hl_color = spct.add_color(**c_hl)
         self.tt.set_text(**l_title)
         self.hide()
@@ -43,7 +44,7 @@ class LogoView(spct.Layout):
         self.tt.set_focused(is_focused)
 
 
-class MainMenuCtr(spct.ViewController):
+class MainMenuCtr(ViewController):
 
     def set_logo(self, logo):
         self.logo = logo
@@ -55,7 +56,7 @@ class MainMenuCtr(spct.ViewController):
             self.logo.show()
 
 
-class LogoCtr(spct.ViewController):
+class LogoCtr(ViewController):
 
     def set_title(self, title):
         self.title = title
@@ -78,8 +79,7 @@ def main(stdscr):
     """Game main loop"""
     WIN_H, WIN_W = stdscr.getmaxyx()
     MENU_H = 0
-    curses.curs_set(0)
-    stdscr.clear()
+    spct.init()
 
     titleV = MainMenuView(WIN_H-MENU_H, WIN_W)
     titleC = MainMenuCtr(titleV)
@@ -93,4 +93,4 @@ def main(stdscr):
 
 
 if __name__ == '__main__':
-    curses.wrapper(main)
+    spct.wrapper(main)
