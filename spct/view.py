@@ -1,10 +1,11 @@
-import spct
-
+import sys
 import curses
 import curses.panel as cpanel
 
+import spct
 
-def _split_text(text, nrows, ncols, ignore=spct.IGNORE_CH):
+
+def _split_text(text, nrows, ncols, ignore=spct.CH_HIGHLIGHT):
     """Split text in lines"""
     lines = text.splitlines()
     result = []
@@ -31,25 +32,25 @@ def _split_text(text, nrows, ncols, ignore=spct.IGNORE_CH):
     return result
 
 
-def _align_text(text, nrows, ncols, v_align, h_align, ignore=spct.IGNORE_CH):
+def _align_text(text, nrows, ncols, v_align, h_align, ignore=spct.CH_HIGHLIGHT):
     """Align text"""
     lines = _split_text(text, nrows, ncols, ignore)
     lines_num = len(lines)
     result = []
     # Vertical align
-    if v_align is spct.V_MIDDLE:
+    if v_align is spct.A_MIDDLE:
         lines_add = (nrows-lines_num) // 2
-    elif v_align is spct.V_BOTTOM:
+    elif v_align is spct.A_BOTTOM:
         lines_add = (nrows-lines_num)
     else:
         lines_add = 0
     v_aligned_lines = [''] * lines_add
     v_aligned_lines.extend(lines)
     # Horizontal align
-    if h_align is spct.H_CENTER:
+    if h_align is spct.A_CENTER:
         for l in v_aligned_lines:
             result.append(l.center(ncols+l.count(ignore)))
-    elif h_align is spct.H_RIGHT:
+    elif h_align is spct.A_RIGHT:
         for l in v_aligned_lines:
             result.append(l.rjust(ncols+l.count(ignore)))
     else:
@@ -69,12 +70,20 @@ class Layout(object):
         self.win = curses.newwin(h, w, y, x)
         self.panel = cpanel.new_panel(self.win)
         self.panel.set_userptr(self)
-        self.callback_keypress = None
+        self.viewctr = None
+        self.initview()
 
-    def on_keypress(self, ch):
-        try:
-            self.callback_keypress(ch)
-        except TypeError:
+    def initview(self):
+        pass
+
+    def run_ctr(self):
+        ch = self.win.getch()
+        if 0 < ch < 256:
+            try:
+                self.viewctr.on_keypress(chr(ch))
+            except TypeError:
+                sys.exit("ViewController missing.")
+        else:
             pass
 
     def show(self):
@@ -114,7 +123,7 @@ class Widget(object):
         self._x = x
         self.pad = self._newpad(h, w)
         self.hl_color = curses.A_BOLD
-        self.hl_mark = spct.IGNORE_CH
+        self.hl_mark = spct.CH_HIGHLIGHT
 
     def _newpad(self, h, w):
         return curses.newpad(h+1, w)  # +1 to fix last space cannot addstr.
@@ -176,7 +185,7 @@ class ButtonView(LabelView):
         super().__init__(layout, h, w, y, x)
         self._is_focused = False
         self._focus_pad = self._newpad(self._h, self._w)
-        self.set_text(text, h_align=spct.H_CENTER)
+        self.set_text(text, h_align=spct.A_CENTER)
 
     def update(self):
         if self._is_focused:
