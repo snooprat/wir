@@ -1,3 +1,6 @@
+import sys
+
+
 class ViewController(object):
     """View Controller control the content of View."""
 
@@ -15,7 +18,8 @@ class ViewController(object):
         self.view.viewctr = self
 
     def on_keypress(self, ch):
-        pass
+        if ch in (ord('Q'), ord('q')):
+            sys.exit("User terminated app")
 
     def show(self):
         self.view.show()

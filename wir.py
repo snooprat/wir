@@ -50,9 +50,9 @@ class MainMenuCtr(ViewController):
         self.logo = logo
 
     def on_keypress(self, ch):
-        if ch in 'Qq':
-            sys.exit()
-        if ch == '1':
+        if ch in (ord('Q'), ord('q')):
+            sys.exit("Game exit")
+        if ch == ord('1'):
             self.logo.show()
 
 
@@ -62,15 +62,15 @@ class LogoCtr(ViewController):
         self.title = title
 
     def on_keypress(self, ch):
-        if ch in 'Qq':
+        if ch in (ord('Q'), ord('q')):
             self.hide()
-        if ch == '2':
+        if ch == ord('2'):
             self.view.set_focused(True)
             # btn1.set_text(h_align=spct.H_LEFT)
-        if ch == '3':
+        if ch == ord('3'):
             self.view.set_focused(False)
             # btn1.set_text(h_align=spct.H_RIGHT)
-        if ch == '4':
+        if ch == spct.KEY_LEFT:
             self.title.show()
         spct.update()
 

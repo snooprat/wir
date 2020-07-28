@@ -1,4 +1,3 @@
-import sys
 import curses
 import curses.panel as cpanel
 
@@ -69,6 +68,7 @@ class ViewLayout(object):
         self._y = y
         self._x = x
         self.win = curses.newwin(h, w, y, x)
+        self.win.keypad(True)
         self.panel = cpanel.new_panel(self.win)
         self.panel.set_userptr(self)
         self.viewctr = None
@@ -87,13 +87,7 @@ class ViewLayout(object):
 
     def run_ctr(self):
         ch = self.win.getch()
-        if 0 < ch < 256:
-            try:
-                self.viewctr.on_keypress(chr(ch))
-            except TypeError:
-                sys.exit("ViewController missing.")
-        else:
-            pass
+        self.viewctr.on_keypress(ch)
 
     def show(self):
         self.panel.show()
