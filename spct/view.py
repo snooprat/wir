@@ -2,6 +2,7 @@ import curses
 import curses.panel as cpanel
 
 import spct
+from spct.event import KeyEvent
 
 
 def _split_text(text, nrows, ncols, ignore=spct.CH_HIGHLIGHT):
@@ -86,8 +87,8 @@ class ViewLayout(object):
         pass
 
     def run_ctr(self):
-        ch = self.win.getch()
-        self.viewctr.on_keypress(ch)
+        ch = KeyEvent(self.win.getch())
+        self.viewctr.get_event(ch)
 
     def show(self):
         self.panel.show()

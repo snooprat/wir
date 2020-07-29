@@ -17,8 +17,8 @@ class ViewController(object):
         self._view = view
         self.view.viewctr = self
 
-    def on_keypress(self, ch):
-        if ch in (ord('Q'), ord('q')):
+    def get_event(self, event):
+        if event.is_key('Qq'):
             sys.exit("User terminated app")
 
     def show(self):
