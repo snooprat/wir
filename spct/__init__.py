@@ -11,6 +11,7 @@ import curses.panel as cpanel
 A_BOLD = curses.A_BOLD
 A_NORMAL = curses.A_NORMAL
 A_REVERSE = curses.A_REVERSE
+A_UNDERLINE = curses.A_UNDERLINE
 
 # Text extract attributes
 A_ATTRIBUTES = curses.A_ATTRIBUTES
