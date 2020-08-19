@@ -2,24 +2,18 @@
 # A curses-based version of War in Russia.
 
 import sys
+import yaml
 
 import spct
 from spct.view import ViewLayout
 from spct.controller import ViewController
 
 
-c_hl = {
-            'cid': 1,
-            'fg': spct.COLOR_YELLOW,
-            'bg': spct.COLOR_BLACK,
-            'attr': spct.A_BOLD,
-        }
-
 l_title = {
-            'label': '`W`ar `i`n `R`ussia\nv0.0.1',
-            'v_align': spct.AL_MIDDLE,
-            'h_align': spct.AL_CENTER,
-            }
+    'label': '`W`ar `i`n `R`ussia\nv0.0.1',
+    'v_align': spct.AL_MIDDLE,
+    'h_align': spct.AL_CENTER,
+}
 
 
 class MainMenuView(ViewLayout):
@@ -31,29 +25,34 @@ class MainMenuView(ViewLayout):
         self.win.vline('v', 5)
 
 
-class LogoView(ViewLayout):
-
-    def init_view(self):
-        self.newbox()
-        self.tt = self.newbutton(self.height-2, self.width-2, 1, 1)
-        self.tt.hl_color = spct.add_color(**c_hl)
-        self.tt.set_text(**l_title)
-        self.hide()
-
-    def set_focused(self, is_focused):
-        self.tt.set_focused(is_focused)
-
-
 class MainMenuCtr(ViewController):
 
     def set_logo(self, logo):
         self.logo = logo
 
-    def get_event(self, event):
+    def set_map(self, wirmap):
+        self.wirmap = wirmap
+
+    def on_event(self, event):
         if event.is_key('Qq'):
             sys.exit("Game exit")
-        if event.is_key('1'):
+        elif event.is_key('1'):
             self.logo.show()
+        elif event.is_key('2'):
+            self.wirmap.show()
+
+
+class LogoView(ViewLayout):
+
+    def init_view(self):
+        self.newbox()
+        self.tt = self.newbutton(self.height-2, self.width-2, 1, 1)
+        self.tt.hl_color = self.get_color('logo_hl')
+        self.tt.set_text(**l_title)
+        self.hide()
+
+    def set_focus(self, is_focus):
+        self.tt.set_focus(is_focus)
 
 
 class LogoCtr(ViewController):
@@ -61,18 +60,34 @@ class LogoCtr(ViewController):
     def set_title(self, title):
         self.title = title
 
-    def get_event(self, event):
+    def on_event(self, event):
         if event.is_key('Qq'):
             self.hide()
-        if event.is_key('2'):
-            self.view.set_focused(True)
+        elif event.is_key('2'):
+            self.view.set_focus(True)
             # btn1.set_text(h_align=spct.H_LEFT)
-        if event.is_key('3'):
-            self.view.set_focused(False)
+        elif event.is_key('3'):
+            self.view.set_focus(False)
             # btn1.set_text(h_align=spct.H_RIGHT)
-        if event.is_key(spct.KEY_LEFT):
+        elif event.is_key(spct.KEY_LEFT):
             self.title.show()
         spct.update()
+
+
+class WIRMapView(ViewLayout):
+
+    def init_view(self):
+        with open('map.yml', 'r') as f:
+            wirmap = yaml.safe_load(f)
+        self.map = self.newmap(wirmap, self.height, self.width)
+        self.hide()
+
+
+class WIRMapCtr(ViewController):
+
+    def on_event(self, event):
+        if event.is_key('Qq'):
+            self.hide()
 
 
 def main(stdscr):
@@ -80,12 +95,18 @@ def main(stdscr):
     WIN_H, WIN_W = stdscr.getmaxyx()
     MENU_H = 0
     spct.init()
+    with open('color.yml', 'r') as f:
+        f_color = yaml.safe_load(f)
+    wircolor = spct.ColorMap(f_color)
 
     titleV = MainMenuView(WIN_H-MENU_H, WIN_W)
     titleC = MainMenuCtr(titleV)
-    logoV = LogoView(WIN_H-10, WIN_W-10, 5, 5)
+    logoV = LogoView(WIN_H-10, WIN_W-10, 5, 5, colors=wircolor)
     logoC = LogoCtr(logoV)
+    mapV = WIRMapView(WIN_H, WIN_W, colors=wircolor)
+    mapC = WIRMapCtr(mapV)
     titleC.set_logo(logoC)
+    titleC.set_map(mapC)
     logoC.set_title(titleC)
     spct.update()
 

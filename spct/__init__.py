@@ -147,10 +147,37 @@ AL_RIGHT = 6
 CH_HIGHLIGHT = '`'
 
 
-def add_color(cid, fg=curses.COLOR_WHITE, bg=curses.COLOR_BLACK,
-              attr=curses.A_NORMAL):
-    curses.init_pair(cid, fg, bg)
-    return curses.color_pair(cid) | attr
+class ColorMap(object):
+    """Manage colors"""
+
+    def __init__(self, colors=None):
+        self._cid = 1
+        self._colors = {}
+        self._attr = dict(
+            A_BOLD=A_BOLD,
+            A_NORMAL=A_NORMAL,
+            A_REVERSE=A_REVERSE,
+            A_UNDERLINE=A_UNDERLINE
+        )
+        self.add_color('default')
+        self.add_color_map(colors)
+
+    def add_color(self, sel, fg=COLOR_WHITE, bg=COLOR_BLACK, attr=A_NORMAL):
+        curses.init_pair(self._cid, fg, bg)
+        self._colors[sel] = curses.color_pair(self._cid) | attr
+        self._cid += 1
+        return self._colors[sel]
+
+    def add_color_map(self, colors):
+        if colors:
+            for k, v in colors.items():
+                fg = v.get('fg', COLOR_WHITE)
+                bg = v.get('bg', COLOR_BLACK)
+                attr = self._attr.get(v.get('attr', 'A_NORMAL'), A_NORMAL)
+                self.add_color(k, fg, bg, attr)
+
+    def get_color(self, sel='default'):
+        return self._colors.get(sel, self._colors['default'])
 
 
 def update():

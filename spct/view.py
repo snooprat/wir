@@ -9,9 +9,9 @@ def _split_text(text, nrows, ncols, ignore=spct.CH_HIGHLIGHT):
     """Split text in lines"""
     lines = text.splitlines()
     result = []
-    for l in lines:
+    for line in lines:
         current_line = ''
-        line_words = l.split(' ')
+        line_words = line.split(' ')
         for word in line_words:
             cl_len = len(current_line.replace(ignore, '')
                          + word.replace(ignore, ''))
@@ -49,11 +49,11 @@ def _align_text(text, nrows, ncols, v_align, h_align,
     v_aligned_lines.extend(lines)
     # Horizontal align
     if h_align is spct.AL_CENTER:
-        for l in v_aligned_lines:
-            result.append(l.center(ncols+l.count(ignore)))
+        for line in v_aligned_lines:
+            result.append(line.center(ncols+line.count(ignore)))
     elif h_align is spct.AL_RIGHT:
-        for l in v_aligned_lines:
-            result.append(l.rjust(ncols+l.count(ignore)))
+        for line in v_aligned_lines:
+            result.append(line.rjust(ncols+line.count(ignore)))
     else:
         result = v_aligned_lines
 
@@ -63,7 +63,7 @@ def _align_text(text, nrows, ncols, v_align, h_align,
 class ViewLayout(object):
     """A view layout is a display area to display widget."""
 
-    def __init__(self, h, w, y=0, x=0):
+    def __init__(self, h, w, y=0, x=0, colors=None):
         self._h = h
         self._w = w
         self._y = y
@@ -73,6 +73,7 @@ class ViewLayout(object):
         self.panel = cpanel.new_panel(self.win)
         self.panel.set_userptr(self)
         self.viewctr = None
+        self._colors = colors
         self.init_view()
 
     @property
@@ -88,7 +89,10 @@ class ViewLayout(object):
 
     def run_ctr(self):
         ch = KeyEvent(self.win.getch())
-        self.viewctr.get_event(ch)
+        self.viewctr.on_event(ch)
+
+    def get_color(self, color):
+        return self._colors.get_color(color)
 
     def show(self):
         self.panel.show()
@@ -112,6 +116,9 @@ class ViewLayout(object):
     def newbutton(self, h, w, y=0, x=0, text="Button"):
         return ButtonView(self, h, w, y, x, text)
 
+    def newmap(self, map_data, h, w, y=0, x=0):
+        return MapView(self, map_data, h, w, y, x)
+
 
 class Widget(object):
     """
@@ -119,18 +126,21 @@ class Widget(object):
     GUI.
     """
 
-    def __init__(self, layout, h, w, y, x):
+    def __init__(self, layout, h, w, y, x, pad_h=None, pad_w=None):
         self.layout = layout
         self._h = h
         self._w = w
         self._y = y
         self._x = x
-        self.pad = self._newpad(h, w)
+        self._padh = h if pad_h is None else pad_h
+        self._padw = w if pad_w is None else pad_w
+        self.pad = self._newpad(self._padh, self._padw)
         self.hl_color = curses.A_BOLD
         self.hl_mark = spct.CH_HIGHLIGHT
 
     def _newpad(self, h, w):
-        return curses.newpad(h+1, w)  # +1 to fix last space cannot addstr.
+        # Pad height +1 to fix last space cannot addstr.
+        return curses.newpad(h+1, w)
 
     def addhstr(self, str, y=None, x=None, attr=0):
         """Add highlight text"""
@@ -151,6 +161,7 @@ class Widget(object):
             self.addhstr(text, i, 0, attr)
 
     def refresh(self, pad=None, win=None):
+        """Overwrite Widget pad text to Layout window area."""
         pad = self.pad if pad is None else pad
         win = self.layout.win if win is None else win
         y = self._y
@@ -187,12 +198,12 @@ class ButtonView(LabelView):
 
     def __init__(self, layout, h, w, y, x, text):
         super().__init__(layout, h, w, y, x)
-        self._is_focused = False
+        self._is_focus = False
         self._focus_pad = self._newpad(self._h, self._w)
         self.set_text(text, h_align=spct.AL_CENTER)
 
     def update(self):
-        if self._is_focused:
+        if self._is_focus:
             self.refresh(self._focus_pad)
         else:
             self.refresh()
@@ -203,9 +214,9 @@ class ButtonView(LabelView):
         self._focus_pad.bkgd(curses.A_REVERSE)
         self.update()
 
-    def set_focused(self, value):
-        if self._is_focused != value:
-            self._is_focused = value
+    def set_focus(self, value):
+        if self._is_focus != value:
+            self._is_focus = value
             self.update()
 
     def get_text(self):
@@ -221,7 +232,7 @@ class ListView(Widget):
         self.current = None
         self.len = 0
 
-    def additem(self, data):
+    def add_item(self, data):
         if self.len < self._h:
             newitem = ButtonView(self.layout, 1, self._w, self.len, 0)
             if self.head is None:
@@ -233,26 +244,49 @@ class ListView(Widget):
                 item.btn_d = newitem
                 newitem.btn_u = item
 
-    def clearitem(self):
+    def clear_item(self):
         pass
 
 
 class MapView(Widget):
     """A simple Map"""
 
-    def __init__(self, layout, h, w, y, x, maph, mapw):
-        super().__init__(layout, h, w, y, x)
-        self._maph = maph
-        self._mapw = mapw
+    def __init__(self, layout, map_data, h, w, y, x):
+        self._map = map_data
+        _maph = self._map['map']['height']
+        _mapw = self._map['map']['width']
+        super().__init__(layout, h, w, y, x, _maph, _mapw)
         self._mapdrawy = 0
         self._mapdrawx = 0
         self._cur_y = 0
         self._cur_x = 0
+        self._hex = None
+        self.init_map()
 
-    def draw_map(self):
+    def init_map(self):
+        cell = self._map['terrain']
+        for t in self._map['map']['data']:
+            if t != ' ':
+                if color := cell[t].get('color'):
+                    attr = self.layout.get_color(color)
+                else:
+                    attr = spct.A_NORMAL
+                self.pad.addch(cell[t]['char'], attr)
+        self.refresh()
+
+    def init_hex(self):
         pass
 
     def move_map(self):
+        pass
+
+    def move_cusor(self):
+        pass
+
+    def get_hex(self):
+        pass
+
+    def set_hex(self):
         pass
 
 
