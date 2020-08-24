@@ -153,12 +153,12 @@ class ColorMap(object):
     def __init__(self, colors=None):
         self._cid = 1
         self._colors = {}
-        self._attr = dict(
-            A_BOLD=A_BOLD,
-            A_NORMAL=A_NORMAL,
-            A_REVERSE=A_REVERSE,
-            A_UNDERLINE=A_UNDERLINE
-        )
+        self._attr = {
+            'A_BOLD': A_BOLD,
+            'A_NORMAL': A_NORMAL,
+            'A_REVERSE': A_REVERSE,
+            'A_UNDERLINE': A_UNDERLINE
+        }
         self.add_color('default')
         self.add_color_map(colors)
 
@@ -173,8 +173,11 @@ class ColorMap(object):
             for k, v in colors.items():
                 fg = v.get('fg', COLOR_WHITE)
                 bg = v.get('bg', COLOR_BLACK)
-                attr = self._attr.get(v.get('attr', 'A_NORMAL'), A_NORMAL)
+                attr = self.get_attr(v.get('attr'))
                 self.add_color(k, fg, bg, attr)
+
+    def get_attr(self, attr):
+        return self._attr.get(attr, A_NORMAL)
 
     def get_color(self, sel='default'):
         return self._colors.get(sel, self._colors['default'])

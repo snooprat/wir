@@ -267,11 +267,8 @@ class MapView(Widget):
         cell = self._map['terrain']
         for t in self._map['map']['data']:
             if t != ' ':
-                if color := cell[t].get('color'):
-                    attr = self.layout.get_color(color)
-                else:
-                    attr = spct.A_NORMAL
-                self.pad.addch(cell[t]['char'], attr)
+                color = self.layout.get_color(cell[t].get('color'))
+                self.pad.addch(cell[t]['char'], color)
         self.refresh()
 
     def init_hex(self):

@@ -18,7 +18,7 @@ class ViewController(object):
         self.view.viewctr = self
 
     def on_event(self, event):
-        if event.is_key('Qq'):
+        if event == 'Qq':
             sys.exit("User terminated app")
 
     def show(self):

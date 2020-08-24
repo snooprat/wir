@@ -11,6 +11,9 @@ class KeyEvent(Event):
     def __repr__(self):
         return "Keyboard Event: {}".format(self.key_code)
 
+    def __eq__(self, other):
+        return self.is_key(other)
+
     def is_key(self, ch):
         if isinstance(ch, str):
             if chr(self.key_code) in ch:

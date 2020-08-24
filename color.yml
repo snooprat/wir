@@ -2,5 +2,5 @@ logo_hl:
   fg: 3
   attr: A_BOLD
 map_river:
-  bg: 6
-  attr: A_NORMAL
+  fg: 6
+  attr: A_BOLD

@@ -34,11 +34,11 @@ class MainMenuCtr(ViewController):
         self.wirmap = wirmap
 
     def on_event(self, event):
-        if event.is_key('Qq'):
+        if event == 'Qq':
             sys.exit("Game exit")
-        elif event.is_key('1'):
+        elif event == '1':
             self.logo.show()
-        elif event.is_key('2'):
+        elif event == '2':
             self.wirmap.show()
 
 
@@ -61,15 +61,15 @@ class LogoCtr(ViewController):
         self.title = title
 
     def on_event(self, event):
-        if event.is_key('Qq'):
+        if event == 'Qq':
             self.hide()
-        elif event.is_key('2'):
+        elif event == '2':
             self.view.set_focus(True)
             # btn1.set_text(h_align=spct.H_LEFT)
-        elif event.is_key('3'):
+        elif event == '3':
             self.view.set_focus(False)
             # btn1.set_text(h_align=spct.H_RIGHT)
-        elif event.is_key(spct.KEY_LEFT):
+        elif event == spct.KEY_LEFT:
             self.title.show()
         spct.update()
 
@@ -86,7 +86,7 @@ class WIRMapView(ViewLayout):
 class WIRMapCtr(ViewController):
 
     def on_event(self, event):
-        if event.is_key('Qq'):
+        if event == 'Qq':
             self.hide()
 
 
