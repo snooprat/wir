@@ -1,0 +1,6 @@
+logo_hl:
+  fg: 3
+  attr: A_BOLD
+map_river:
+  fg: 6
+  attr: A_BOLD
