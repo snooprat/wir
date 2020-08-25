@@ -1,7 +1,7 @@
 import curses
 import curses.panel as cpanel
 
-import spct
+import spct.screen as spct
 from spct.event import KeyEvent
 
 

@@ -5,8 +5,6 @@ import sys
 import yaml
 
 import spct
-from spct.view import ViewLayout
-from spct.controller import ViewController
 
 
 l_title = {
@@ -16,7 +14,7 @@ l_title = {
 }
 
 
-class MainMenuView(ViewLayout):
+class MainMenuView(spct.ViewLayout):
 
     def init_view(self):
         self.win.addch('t')
@@ -25,7 +23,7 @@ class MainMenuView(ViewLayout):
         self.win.vline('v', 5)
 
 
-class MainMenuCtr(ViewController):
+class MainMenuCtr(spct.ViewController):
 
     def set_logo(self, logo):
         self.logo = logo
@@ -42,7 +40,7 @@ class MainMenuCtr(ViewController):
             self.wirmap.show()
 
 
-class LogoView(ViewLayout):
+class LogoView(spct.ViewLayout):
 
     def init_view(self):
         self.newbox()
@@ -55,7 +53,7 @@ class LogoView(ViewLayout):
         self.tt.set_focus(is_focus)
 
 
-class LogoCtr(ViewController):
+class LogoCtr(spct.ViewController):
 
     def set_title(self, title):
         self.title = title
@@ -74,7 +72,7 @@ class LogoCtr(ViewController):
         spct.update()
 
 
-class WIRMapView(ViewLayout):
+class WIRMapView(spct.ViewLayout):
 
     def init_view(self):
         with open('map.yml', 'r') as f:
@@ -83,7 +81,7 @@ class WIRMapView(ViewLayout):
         self.hide()
 
 
-class WIRMapCtr(ViewController):
+class WIRMapCtr(spct.ViewController):
 
     def on_event(self, event):
         if event == 'Qq':
