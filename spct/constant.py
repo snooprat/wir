@@ -1,6 +1,4 @@
-import sys
 import curses
-import curses.panel as cpanel
 
 
 # CONSTANT
@@ -141,65 +139,19 @@ AL_LEFT = 4
 AL_CENTER = 5
 AL_RIGHT = 6
 
-# Special character for print specific text.
+# Special characters.
 CH_HIGHLIGHT = '`'
-
-
-class ColorMap(object):
-    """Manage colors"""
-
-    def __init__(self, colors=None):
-        self._cid = 1
-        self._colors = {}
-        self._attr = {
-            'A_BOLD': A_BOLD,
-            'A_NORMAL': A_NORMAL,
-            'A_REVERSE': A_REVERSE,
-            'A_UNDERLINE': A_UNDERLINE
-        }
-        self.add_color('default')
-        self.add_color_map(colors)
-
-    def add_color(self, sel, fg=COLOR_WHITE, bg=COLOR_BLACK, attr=A_NORMAL):
-        curses.init_pair(self._cid, fg, bg)
-        self._colors[sel] = curses.color_pair(self._cid) | attr
-        self._cid += 1
-        return self._colors[sel]
-
-    def add_color_map(self, colors):
-        if colors:
-            for k, v in colors.items():
-                fg = v.get('fg', COLOR_WHITE)
-                bg = v.get('bg', COLOR_BLACK)
-                attr = self.get_attr(v.get('attr'))
-                self.add_color(k, fg, bg, attr)
-
-    def get_attr(self, attr):
-        return self._attr.get(attr, A_NORMAL)
-
-    def get_color(self, sel='default'):
-        return self._colors.get(sel, self._colors['default'])
-
-
-def update():
-    """Update screen display"""
-    cpanel.update_panels()
-    curses.doupdate()
-
-
-def run():
-    """Run the top layout's function."""
-    while True:
-        try:
-            top_layout = cpanel.top_panel().userptr()
-        except AttributeError:
-            sys.exit("Please create at least one view layout.")
-        top_layout.run_ctr()
-
-
-def init():
-    curses.curs_set(0)
-
-
-def wrapper(*args, **kwds):
-    curses.wrapper(*args, **kwds)
+CH_A_BOLD = 'A_BOLD'
+CH_A_NORMAL = 'A_NORMAL'
+CH_A_REVERSE = 'A_REVERSE'
+CH_A_UNDERLINE = 'A_UNDERLINE'
+CH_COLOR_DEFAULT = 'default'
+CH_COLOR_FG = 'fg'
+CH_COLOR_BG = 'bg'
+CH_COLOR_ATTR = 'attr'
+CH_MAP_MAPH = 'map_height'
+CH_MAP_MAPW = 'map_width'
+CH_MAP_MAP = 'map'
+CH_MAP_CELL = 'cell'
+CH_MAP_CHAR = 'char'
+CH_MAP_COLOR = 'color'

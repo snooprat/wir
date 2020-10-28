@@ -49,9 +49,6 @@ class LogoView(spct.ViewLayout):
         self.tt.set_text(**l_title)
         self.hide()
 
-    def set_focus(self, is_focus):
-        self.tt.set_focus(is_focus)
-
 
 class LogoCtr(spct.ViewController):
 
@@ -62,10 +59,10 @@ class LogoCtr(spct.ViewController):
         if event == 'Qq':
             self.hide()
         elif event == '2':
-            self.view.set_focus(True)
+            self.view.tt.focus = True
             # btn1.set_text(h_align=spct.H_LEFT)
         elif event == '3':
-            self.view.set_focus(False)
+            self.view.tt.focus = False
             # btn1.set_text(h_align=spct.H_RIGHT)
         elif event == spct.KEY_LEFT:
             self.title.show()
@@ -78,7 +75,14 @@ class WIRMapView(spct.ViewLayout):
         with open('map.yml', 'r') as f:
             wirmap = yaml.safe_load(f)
         self.map = self.newmap(wirmap, self.height, self.width)
+        self.layer_unit = self.map.add_layer()
+        self.layer_unit.addstr(5, 18, '[X]', self.get_color('unit1'))
+        self.map.update_layers()
         self.hide()
+
+    def move(self, new_y, new_x):
+        self.map.move_map(new_y, new_x)
+        self.map.update_layers()
 
 
 class WIRMapCtr(spct.ViewController):
@@ -86,6 +90,8 @@ class WIRMapCtr(spct.ViewController):
     def on_event(self, event):
         if event == 'Qq':
             self.hide()
+        if event == spct.KEY_LEFT:
+            self.view.move(self.view.map.map_y, self.view.map.map_x+1)
 
 
 def main(stdscr):

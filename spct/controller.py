@@ -18,6 +18,7 @@ class ViewController(object):
         self.view.viewctr = self
 
     def on_event(self, event):
+        """Overload view on event code"""
         if event == 'Qq':
             sys.exit("User terminated app")
 

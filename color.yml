@@ -1,6 +1,18 @@
+# BLACK = 0,8
+# RED = 1,9
+# GREEN = 2,10
+# YELLOW = 3,11
+# BLUE = 4,12
+# MAGENTA =5,13
+# CYAN = 6,14
+# WHITE = 7,15
+
 logo_hl:
   fg: 3
   attr: A_BOLD
 map_river:
   fg: 6
+  attr: A_BOLD
+unit1:
+  fg: 3
   attr: A_BOLD
