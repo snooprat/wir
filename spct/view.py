@@ -283,7 +283,7 @@ class MapView(Widget):
         self._mapdrawx = 0
         self._cur_y = 0
         self._cur_x = 0
-        self._hex = None
+        self._grid = None
         self._layers = []
         self.init_map()
 
@@ -306,8 +306,10 @@ class MapView(Widget):
                 self.addch(map_char, color)
         self.update()
 
-    def init_hex(self):
-        pass
+    def init_grid(self):
+        grid_type = self._map[CONST.CH_MAP_GRID_TYPE]
+        grid_h = self._map[CONST.CH_MAP_GRIDH]
+        grid_w = self._map[CONST.CH_MAP_GRIDW]
 
     def add_layer(self):
         layer = MapLayer(self._newpad(self._padh, self._padw))
@@ -325,11 +327,11 @@ class MapView(Widget):
     def move_map(self, new_y, new_x):
         if new_y <= 0:
             new_y = 0
-        elif new_y > (max_y := self._padw - self._w):
+        elif new_y > (max_y := self._padh - self._h):
             new_y = max_y
         if new_x <= 0:
             new_x = 0
-        elif new_x > (max_x := self._padh - self._h):
+        elif new_x > (max_x := self._padw - self._w):
             new_x = max_x
         self._mapdrawy = new_y
         self._mapdrawx = new_x
