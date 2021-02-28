@@ -96,6 +96,9 @@ class ViewLayout(object):
         """Overload view initial code"""
         pass
 
+    def set_ctr(self, ctr):
+        self.viewctr = ctr
+
     def run_ctr(self):
         ch = KeyEvent(self.win.getch())
         self.viewctr.on_event(ch)
@@ -141,9 +144,27 @@ class Widget(object):
         self._w = w
         self._y = y
         self._x = x
+        self._pad_draw_y = 0
+        self._pad_draw_x = 0
         self._padh = h if pad_h is None else pad_h
         self._padw = w if pad_w is None else pad_w
         self._pad = self._newpad(self._padh, self._padw)
+        # calculate draw area
+        diff_y = 0
+        diff_x = 0
+        maxh = self._h
+        maxw = self._w
+        if self._padh < self._h:
+            diff_y = int((self._h - self._padh) / 2)
+            maxh = self._padh
+        if self._padw < self._w:
+            diff_x = int((self._w - self._padw) / 2)
+            maxw = self._padw
+        self._draw_from_y = self._y + diff_y
+        self._draw_from_x = self._x + diff_x
+        self._draw_to_y = self._draw_from_y + maxh - 1
+        self._draw_to_x = self._draw_from_x + maxw - 1
+        # functions and colors
         self.addstr = self.pad.addstr
         self.addch = self.pad.addch
         self.hl_color = CONST.A_BOLD
@@ -152,6 +173,32 @@ class Widget(object):
     @property
     def pad(self):
         return self._pad
+
+    @property
+    def pad_draw_y(self):
+        return self._pad_draw_y
+
+    @pad_draw_y.setter
+    def pad_draw_y(self, value):
+        # check the value is correct
+        if value <= 0:
+            value = 0
+        elif value > (maxy := self._padh - self._h):
+            value = maxy if maxy > 0 else 0
+        self._pad_draw_y = value
+
+    @property
+    def pad_draw_x(self):
+        return self._pad_draw_x
+
+    @pad_draw_x.setter
+    def pad_draw_x(self, value):
+        # check the value is correct
+        if value <= 0:
+            value = 0
+        elif value > (max_x := self._padw - self._w):
+            value = max_x if max_x > 0 else 0
+        self._pad_draw_x = value
 
     def _newpad(self, h, w):
         # Pad height +1 to fix last space cannot addstr.
@@ -175,18 +222,23 @@ class Widget(object):
         for i, text in enumerate(lines):
             self.addhstr(text, i, 0, attr)
 
-    def update(self, pad=None, win=None, pad_y=0, pad_x=0, overlay=False):
+    def update(self, pad=None, win=None, pad_y=None, pad_x=None,
+               overlay=False):
         """Overwrite Widget pad text to Layout window area."""
         pad = self.pad if pad is None else pad
         win = self.layout.win if win is None else win
-        win_y = self._y
-        win_x = self._x
-        maxrows = win_y + self._h - 1
-        maxcols = win_x + self._w - 1
+        if pad_y is not None:
+            self.pad_draw_y = pad_y
+        if pad_x is not None:
+            self.pad_draw_x = pad_x
         if overlay:
-            pad.overlay(win, pad_y, pad_x, win_y, win_x, maxrows, maxcols)
+            pad.overlay(win, self.pad_draw_y, self.pad_draw_x,
+                        self._draw_from_y, self._draw_from_x,
+                        self._draw_to_y, self._draw_to_x)
         else:
-            pad.overwrite(win, pad_y, pad_x, win_y, win_x, maxrows, maxcols)
+            pad.overwrite(win, self.pad_draw_y, self.pad_draw_x,
+                          self._draw_from_y, self._draw_from_x,
+                          self._draw_to_y, self._draw_to_x)
 
 
 class LabelView(Widget):
@@ -255,17 +307,17 @@ class ListView(Widget):
         self.current = None
         self.len = 0
 
-    def add_item(self, data):
-        if self.len < self._h:
-            newitem = ButtonView(self.layout, 1, self._w, self.len, 0)
-            if self.head is None:
-                self.head = newitem
-            else:
-                item = self.head
-                while item.btn_d is not None:
-                    item = item.btn_d
-                item.btn_d = newitem
-                newitem.btn_u = item
+    # def add_item(self, data):
+    #     if self.len < self._h:
+    #         newitem = ButtonView(self.layout, 1, self._w, self.len, 0)
+    #         if self.head is None:
+    #             self.head = newitem
+    #         else:
+    #             item = self.head
+    #             while item.btn_d is not None:
+    #                 item = item.btn_d
+    #             item.btn_d = newitem
+    #             newitem.btn_u = item
 
     def clear_item(self):
         pass
@@ -279,21 +331,27 @@ class MapView(Widget):
         _maph = self._map[CONST.CH_MAP_MAPH]
         _mapw = self._map[CONST.CH_MAP_MAPW]
         super().__init__(layout, h, w, y, x, _maph, _mapw)
-        self._mapdrawy = 0
-        self._mapdrawx = 0
         self._cur_y = 0
         self._cur_x = 0
-        self._grid = None
+        self._grid = []
         self._layers = []
         self.init_map()
 
     @property
-    def map_y(self):
-        return self._mapdrawy
+    def mapdrawy(self):
+        return self.pad_draw_y
+
+    @mapdrawy.setter
+    def mapdrawy(self, value):
+        self.pad_draw_y = value
 
     @property
-    def map_x(self):
-        return self._mapdrawx
+    def mapdrawx(self):
+        return self.pad_draw_x
+
+    @mapdrawx.setter
+    def mapdrawx(self, value):
+        self.pad_draw_x = value
 
     def init_map(self):
         mapdata = self._map[CONST.CH_MAP_MAP]
@@ -310,6 +368,17 @@ class MapView(Widget):
         grid_type = self._map[CONST.CH_MAP_GRID_TYPE]
         grid_h = self._map[CONST.CH_MAP_GRIDH]
         grid_w = self._map[CONST.CH_MAP_GRIDW]
+        grid_len = 3
+        grid_offset = 2
+        grid_space = 1
+        if grid_type is CONST.CH_MAP_SQUARE:
+            pass
+        for row in range(grid_h):
+            self._grid.append([])
+            for col in range(grid_w):
+                grid_y = row
+                grid_x = col * (grid_len + grid_space) + grid_offset
+                self._grid[row].append([grid_y, grid_x])
 
     def add_layer(self):
         layer = MapLayer(self._newpad(self._padh, self._padw))
@@ -317,24 +386,14 @@ class MapView(Widget):
         return layer
 
     def update_layers(self):
-        map_y = self._mapdrawy
-        map_x = self._mapdrawx
-        self.update(pad_y=map_y, pad_x=map_x)
+        self.update()
         for layer in self._layers:
             if layer.is_visible:
-                self.update(layer.pad, pad_y=map_y, pad_x=map_x, overlay=True)
+                self.update(layer.pad, overlay=True)
 
     def move_map(self, new_y, new_x):
-        if new_y <= 0:
-            new_y = 0
-        elif new_y > (max_y := self._padh - self._h):
-            new_y = max_y
-        if new_x <= 0:
-            new_x = 0
-        elif new_x > (max_x := self._padw - self._w):
-            new_x = max_x
-        self._mapdrawy = new_y
-        self._mapdrawx = new_x
+        self.mapdrawy = new_y
+        self.mapdrawx = new_x
 
     def move_cusor(self):
         pass

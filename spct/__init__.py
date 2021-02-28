@@ -6,7 +6,7 @@ import curses.panel as cpanel
 
 from spct.constant import *
 from spct.view import ViewLayout
-from spct.controller import ViewController
+from spct.viewctr import ViewController
 
 
 class ColorMap(object):
@@ -56,9 +56,9 @@ def run():
     while True:
         try:
             top_layout = cpanel.top_panel().userptr()
+            top_layout.run_ctr()
         except AttributeError:
             sys.exit("Please create at least one view layout.")
-        top_layout.run_ctr()
 
 
 def init():

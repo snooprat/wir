@@ -91,13 +91,13 @@ class WIRMapCtr(spct.ViewController):
         if event == 'Qq':
             self.hide()
         if event == spct.KEY_LEFT:
-            self.view.move(self.view.map.map_y, self.view.map.map_x-1)
+            self.view.move(self.view.map.mapdrawy, self.view.map.mapdrawx-1)
         if event == spct.KEY_RIGHT:
-            self.view.move(self.view.map.map_y, self.view.map.map_x+1)
+            self.view.move(self.view.map.mapdrawy, self.view.map.mapdrawx+1)
         if event == spct.KEY_UP:
-            self.view.move(self.view.map.map_y-1, self.view.map.map_x)
+            self.view.move(self.view.map.mapdrawy-1, self.view.map.mapdrawx)
         if event == spct.KEY_DOWN:
-            self.view.move(self.view.map.map_y+1, self.view.map.map_x)
+            self.view.move(self.view.map.mapdrawy+1, self.view.map.mapdrawx)
 
 
 def main(stdscr):
