@@ -1,8 +1,10 @@
 map_height: 28
 map_width: 96
-grid_type: hex
-grid_height: 10
-grid_width: 10
+grid_height: 28
+grid_width: 24
+grid_len: 3
+grid_offset: 2
+grid_space: 1
 
 cell:
   '1':

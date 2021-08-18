@@ -5,7 +5,7 @@ import spct.constant as CONST
 from spct.event import KeyEvent
 
 
-def _split_text(text, nrows, ncols, ignore=CONST.CH_HIGHLIGHT):
+def _split_text(text, nrows, ncols, strong=CONST.CH_HIGHLIGHT):
     """Split text in lines"""
     lines = text.splitlines()
     result = []
@@ -13,8 +13,8 @@ def _split_text(text, nrows, ncols, ignore=CONST.CH_HIGHLIGHT):
         current_line = ''
         line_words = line.split(' ')
         for word in line_words:
-            cl_len = len(current_line.replace(ignore, '')
-                         + word.replace(ignore, ''))
+            cl_len = len(current_line.replace(strong, '')
+                         + word.replace(strong, ''))
             if current_line and cl_len > ncols:
                 result.append(current_line.rstrip())
                 current_line = word + ' '
@@ -27,7 +27,7 @@ def _split_text(text, nrows, ncols, ignore=CONST.CH_HIGHLIGHT):
         result[nrows-1] = result[nrows-1][:ncols-3] + '...'
     # Check for width.
     for i, line in enumerate(result):
-        if len(line.replace(ignore, '')) > ncols:
+        if len(line.replace(strong, '')) > ncols:
             result[i] = line[:ncols-3] + '...'
     return result
 
@@ -134,8 +134,7 @@ class ViewLayout(object):
 
 class Widget(object):
     """
-    A Widget is a re-usable component that can be used to create a simple
-    GUI.
+    A Widget is a re-usable component that can be used to create a simple GUI.
     """
 
     def __init__(self, layout, h, w, y, x, pad_h=None, pad_w=None):
@@ -336,6 +335,7 @@ class MapView(Widget):
         self._grid = []
         self._layers = []
         self.init_map()
+        self.init_grid()
 
     @property
     def mapdrawy(self):
@@ -354,30 +354,27 @@ class MapView(Widget):
         self.pad_draw_x = value
 
     def init_map(self):
-        mapdata = self._map[CONST.CH_MAP_MAP]
+        mapdata = self._map[CONST.CH_MAP_MAP].replace(' ', '')
         cell = self._map[CONST.CH_MAP_CELL]
         for t in mapdata:
-            if t != ' ':
-                color_name = cell[t].get(CONST.CH_MAP_COLOR)
-                color = self.layout.get_color(color_name)
-                map_char = cell[t][CONST.CH_MAP_CHAR]
-                self.addch(map_char, color)
+            color_name = cell[t].get(CONST.CH_MAP_COLOR)
+            color = self.layout.get_color(color_name)
+            map_char = cell[t][CONST.CH_MAP_CHAR]
+            self.addch(map_char, color)
         self.update()
 
     def init_grid(self):
-        grid_type = self._map[CONST.CH_MAP_GRID_TYPE]
         grid_h = self._map[CONST.CH_MAP_GRIDH]
         grid_w = self._map[CONST.CH_MAP_GRIDW]
-        grid_len = 3
-        grid_offset = 2
-        grid_space = 1
-        if grid_type is CONST.CH_MAP_SQUARE:
-            pass
+        grid_len = self._map[CONST.CH_MAP_GRID_LEN]
+        grid_offset = self._map[CONST.CH_MAP_GRID_OFFSET]
+        grid_space = self._map[CONST.CH_MAP_GRID_SPACE]
         for row in range(grid_h):
             self._grid.append([])
             for col in range(grid_w):
                 grid_y = row
-                grid_x = col * (grid_len + grid_space) + grid_offset
+                offset = grid_offset * int(row % 2)
+                grid_x = col * (grid_len+grid_space) + offset
                 self._grid[row].append([grid_y, grid_x])
 
     def add_layer(self):

@@ -20,7 +20,7 @@ class MainMenuView(spct.ViewLayout):
         self.win.addch('t')
         self.win.addstr(4, 20, '12345')
         self.win.hline('h', 5)
-        self.win.vline('v', 5)
+        self.win.vline('a', 5)
 
 
 class MainMenuCtr(spct.ViewController):
@@ -104,6 +104,7 @@ def main(stdscr):
     """Game main loop"""
     WIN_H, WIN_W = stdscr.getmaxyx()
     MENU_H = 0
+
     spct.init()
     with open('color.yml', 'r') as f:
         f_color = yaml.safe_load(f)
