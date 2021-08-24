@@ -77,12 +77,12 @@ class WIRMapView(spct.ViewLayout):
         self.map = self.newmap(wirmap, self.height, self.width)
         self.layer_unit = self.map.add_layer()
         self.layer_unit.addstr(5, 18, '[X]', self.get_color('unit1'))
-        self.map.update_layers()
+        self.map.update(all_layers=True)
         self.hide()
 
     def move(self, new_y, new_x):
         self.map.move_map(new_y, new_x)
-        self.map.update_layers()
+        self.map.update()
 
 
 class WIRMapCtr(spct.ViewController):
@@ -98,6 +98,11 @@ class WIRMapCtr(spct.ViewController):
             self.view.move(self.view.map.mapdrawy-1, self.view.map.mapdrawx)
         if event == spct.KEY_DOWN:
             self.view.move(self.view.map.mapdrawy+1, self.view.map.mapdrawx)
+        if event == '3':
+            self.view.map.move_cusor(5, 1)
+
+        if event == '4':
+            self.view.map.move_cusor(5, 4)
 
 
 def main(stdscr):

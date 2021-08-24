@@ -221,8 +221,7 @@ class Widget(object):
         for i, text in enumerate(lines):
             self.addhstr(text, i, 0, attr)
 
-    def update(self, pad=None, win=None, pad_y=None, pad_x=None,
-               overlay=False):
+    def update(self, pad=None, win=None, pad_y=None, pad_x=None):
         """Overwrite Widget pad text to Layout window area."""
         pad = self.pad if pad is None else pad
         win = self.layout.win if win is None else win
@@ -230,14 +229,9 @@ class Widget(object):
             self.pad_draw_y = pad_y
         if pad_x is not None:
             self.pad_draw_x = pad_x
-        if overlay:
-            pad.overlay(win, self.pad_draw_y, self.pad_draw_x,
-                        self._draw_from_y, self._draw_from_x,
-                        self._draw_to_y, self._draw_to_x)
-        else:
-            pad.overwrite(win, self.pad_draw_y, self.pad_draw_x,
-                          self._draw_from_y, self._draw_from_x,
-                          self._draw_to_y, self._draw_to_x)
+        pad.overwrite(win, self.pad_draw_y, self.pad_draw_x,
+                      self._draw_from_y, self._draw_from_x,
+                      self._draw_to_y, self._draw_to_x)
 
 
 class LabelView(Widget):
@@ -333,7 +327,9 @@ class MapView(Widget):
         self._cur_y = 0
         self._cur_x = 0
         self._grid = []
+        self._grid_len = 3
         self._layers = []
+        self.map_layer = None
         self.init_map()
         self.init_grid()
 
@@ -353,24 +349,34 @@ class MapView(Widget):
     def mapdrawx(self, value):
         self.pad_draw_x = value
 
+    @property
+    def cur_y(self):
+        return self._cur_y
+
+    @property
+    def cur_x(self):
+        return self._cur_x
+
     def init_map(self):
         mapdata = self._map[CONST.CH_MAP_MAP].replace(' ', '')
         cell = self._map[CONST.CH_MAP_CELL]
+        self.map_layer = self.add_layer()  # create a base map
         for t in mapdata:
             color_name = cell[t].get(CONST.CH_MAP_COLOR)
             color = self.layout.get_color(color_name)
             map_char = cell[t][CONST.CH_MAP_CHAR]
-            self.addch(map_char, color)
+            self.map_layer.addch(map_char, color)
         self.update()
 
     def init_grid(self):
         grid_h = self._map[CONST.CH_MAP_GRIDH]
         grid_w = self._map[CONST.CH_MAP_GRIDW]
         grid_len = self._map[CONST.CH_MAP_GRID_LEN]
+        self._grid_len = grid_len
         grid_offset = self._map[CONST.CH_MAP_GRID_OFFSET]
         grid_space = self._map[CONST.CH_MAP_GRID_SPACE]
         for row in range(grid_h):
-            self._grid.append([])
+            self._grid.append([])  # create a row
             for col in range(grid_w):
                 grid_y = row
                 offset = grid_offset * int(row % 2)
@@ -382,27 +388,49 @@ class MapView(Widget):
         self._layers.append(layer)
         return layer
 
-    def update_layers(self):
-        self.update()
-        for layer in self._layers:
-            if layer.is_visible:
-                self.update(layer.pad, overlay=True)
+    def update(self, pad=None, win=None, pad_y=None, pad_x=None,
+               all_layers=False):
+        if all_layers:
+            for layer in self._layers:
+                if layer.is_visible:
+                    layer.pad.overlay(self.pad)
+        super().update(pad, win, pad_y, pad_x)
 
     def move_map(self, new_y, new_x):
         self.mapdrawy = new_y
         self.mapdrawx = new_x
 
-    def move_cusor(self):
+    def move_cusor(self, y, x):
+        pre_cur_y = self._cur_y
+        pre_cur_x = self._cur_x
+        self._cur_y = y
+        self._cur_x = x
+        self.highlight_hex(pre_cur_y, pre_cur_x, False)
+        self.highlight_hex(y, x, True)
+        self.update()
+
+    def get_grid_yx(self, y, x):
+        return self._grid[y][x]
+
+    def get_hex(self, y, x):
+        result = []
+        hex_y, hex_x = self.get_grid_yx(y, x)
+        for i in range(self._grid_len):
+            result.append([self.pad.inch(hex_y, hex_x+i), hex_y, hex_x+i])
+        return result
+
+    def set_hex(self, hex_data, hex_attr):
         pass
 
-    def get_hex(self):
-        pass
-
-    def set_hex(self):
-        pass
-
-    def highlight_hex(self):
-        pass
+    def highlight_hex(self, y, x, is_on):
+        hex_data = self.get_hex(y, x)
+        for h in hex_data:
+            hex_d, hex_y, hex_x = h
+            self.pad.move(hex_y, hex_x)
+            if is_on:
+                self.pad.addch(hex_d | CONST.A_REVERSE)
+            else:
+                self.pad.addch(hex_d & ~CONST.A_REVERSE)
 
 
 class MapLayer(object):
