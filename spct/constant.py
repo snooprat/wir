@@ -161,3 +161,13 @@ CH_MAP_GRIDW = 'grid_width'
 CH_MAP_GRID_LEN = 'grid_len'
 CH_MAP_GRID_OFFSET = 'grid_offset'
 CH_MAP_GRID_SPACE = 'grid_space'
+CH_MAP_MARGIN = 'map_margin'
+CH_MAP_GRIDY = 'grid_starty'
+CH_MAP_GRIDX = 'grid_startx'
+
+# Default Value
+DEF_MAP_GRID_LEN = 3
+DEF_MAP_GRID_OFFSET = 2
+DEF_MAP_GRID_SPACE = 1
+DEF_MAP_GRIDY = 0
+DEF_MAP_GRIDX = 0

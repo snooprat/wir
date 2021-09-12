@@ -84,6 +84,10 @@ class WIRMapView(spct.ViewLayout):
         self.map.move_map(new_y, new_x)
         self.map.update()
 
+    def move_cusor(self, new_gy, new_gx):
+        self.map.move_cusor(new_gy, new_gx)
+        self.map.update()
+
 
 class WIRMapCtr(spct.ViewController):
 
@@ -91,18 +95,13 @@ class WIRMapCtr(spct.ViewController):
         if event == 'Qq':
             self.hide()
         if event == spct.KEY_LEFT:
-            self.view.move(self.view.map.mapdrawy, self.view.map.mapdrawx-1)
+            self.view.move_cusor(self.view.map.cur_gy, self.view.map.cur_gx-1)
         if event == spct.KEY_RIGHT:
-            self.view.move(self.view.map.mapdrawy, self.view.map.mapdrawx+1)
+            self.view.move_cusor(self.view.map.cur_gy, self.view.map.cur_gx+1)
         if event == spct.KEY_UP:
-            self.view.move(self.view.map.mapdrawy-1, self.view.map.mapdrawx)
+            self.view.move_cusor(self.view.map.cur_gy-1, self.view.map.cur_gx)
         if event == spct.KEY_DOWN:
-            self.view.move(self.view.map.mapdrawy+1, self.view.map.mapdrawx)
-        if event == '3':
-            self.view.map.move_cusor(5, 1)
-
-        if event == '4':
-            self.view.map.move_cusor(5, 4)
+            self.view.move_cusor(self.view.map.cur_gy+1, self.view.map.cur_gx)
 
 
 def main(stdscr):

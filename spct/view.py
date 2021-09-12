@@ -163,6 +163,8 @@ class Widget(object):
         self._draw_from_x = self._x + diff_x
         self._draw_to_y = self._draw_from_y + maxh - 1
         self._draw_to_x = self._draw_from_x + maxw - 1
+        self._draw_maxh = maxh
+        self._draw_maxw = maxw
         # functions and colors
         self.addstr = self.pad.addstr
         self.addch = self.pad.addch
@@ -324,10 +326,12 @@ class MapView(Widget):
         _maph = self._map[CONST.CH_MAP_MAPH]
         _mapw = self._map[CONST.CH_MAP_MAPW]
         super().__init__(layout, h, w, y, x, _maph, _mapw)
-        self._cur_y = 0
-        self._cur_x = 0
+        self._cur_gy = 0
+        self._cur_gx = 0
         self._grid = []
         self._grid_len = 3
+        self._gridh = 0
+        self._gridw = 0
         self._layers = []
         self.map_layer = None
         self.init_map()
@@ -350,15 +354,32 @@ class MapView(Widget):
         self.pad_draw_x = value
 
     @property
-    def cur_y(self):
-        return self._cur_y
+    def cur_gy(self):
+        return self._cur_gy
+
+    @cur_gy.setter
+    def cur_gy(self, value):
+        if value < 0:
+            value = 0
+        elif value > (max_gy := self._gridh - 1):
+            value = max_gy
+        self._cur_gy = value
 
     @property
-    def cur_x(self):
-        return self._cur_x
+    def cur_gx(self):
+        return self._cur_gx
+
+    @cur_gx.setter
+    def cur_gx(self, value):
+        if value < 0:
+            value = 0
+        elif value > (max_gx := self._gridw - 1):
+            value = max_gx
+        self._cur_gx = value
 
     def init_map(self):
         mapdata = self._map[CONST.CH_MAP_MAP].replace(' ', '')
+        self._margin = self._map[CONST.CH_MAP_MARGIN]
         cell = self._map[CONST.CH_MAP_CELL]
         self.map_layer = self.add_layer()  # create a base map
         for t in mapdata:
@@ -371,16 +392,26 @@ class MapView(Widget):
     def init_grid(self):
         grid_h = self._map[CONST.CH_MAP_GRIDH]
         grid_w = self._map[CONST.CH_MAP_GRIDW]
-        grid_len = self._map[CONST.CH_MAP_GRID_LEN]
+        grid_len = self._map.get(CONST.CH_MAP_GRID_LEN,
+                                 CONST.DEF_MAP_GRID_LEN)
+        grid_offset = self._map.get(CONST.CH_MAP_GRID_OFFSET,
+                                    CONST.DEF_MAP_GRID_OFFSET)
+        grid_space = self._map.get(CONST.CH_MAP_GRID_SPACE,
+                                   CONST.DEF_MAP_GRID_SPACE)
+        grid_starty = self._map.get(CONST.CH_MAP_GRIDY, CONST.DEF_MAP_GRIDY)
+        grid_startx = self._map.get(CONST.CH_MAP_GRIDX, CONST.DEF_MAP_GRIDX)
+        self._gridh = grid_h
+        self._gridw = grid_w
         self._grid_len = grid_len
-        grid_offset = self._map[CONST.CH_MAP_GRID_OFFSET]
-        grid_space = self._map[CONST.CH_MAP_GRID_SPACE]
+        self._grid_space = grid_space
+        self._margin_y = self._margin
+        self._margin_x = self._margin * (self._grid_len+self._grid_space)
         for row in range(grid_h):
             self._grid.append([])  # create a row
             for col in range(grid_w):
-                grid_y = row
+                grid_y = row + grid_starty
                 offset = grid_offset * int(row % 2)
-                grid_x = col * (grid_len+grid_space) + offset
+                grid_x = col * (grid_len+grid_space) + offset + grid_startx
                 self._grid[row].append([grid_y, grid_x])
 
     def add_layer(self):
@@ -400,21 +431,44 @@ class MapView(Widget):
         self.mapdrawy = new_y
         self.mapdrawx = new_x
 
-    def move_cusor(self, y, x):
-        pre_cur_y = self._cur_y
-        pre_cur_x = self._cur_x
-        self._cur_y = y
-        self._cur_x = x
-        self.highlight_hex(pre_cur_y, pre_cur_x, False)
-        self.highlight_hex(y, x, True)
-        self.update()
+    def move_cusor(self, gy, gx):
+        pre_cur_gy = self.cur_gy
+        pre_cur_gx = self.cur_gx
+        self.cur_gy = gy
+        self.cur_gx = gx
+        # Highlight cursor hex
+        self.highlight_hex(pre_cur_gy, pre_cur_gx, False)
+        self.highlight_hex(self.cur_gy, self._cur_gx, True)
+        # Move the map when the cursor move to the edge margin
+        is_redraw = False
+        cur_y, cur_x = self.get_grid_yx(self.cur_gy, self.cur_gx)
+        draw_y = self.pad_draw_y
+        draw_x = self.pad_draw_x
+        move_y = draw_y
+        move_x = draw_x
+        if draw_y > 0 and draw_y > (new := cur_y - self._margin_y):
+            move_y = new
+            is_redraw = True
+        if ((old := draw_y + self._draw_maxh) < self._padh and
+                old < (new := cur_y + 1 + self._margin_y)):
+            move_y = new - self._draw_maxh
+            is_redraw = True
+        if draw_x > 0 and draw_x > (new := cur_x - self._margin_x):
+            move_x = new
+            is_redraw = True
+        if ((old := draw_x + self._draw_maxw) < self._padw and
+                old < (new := cur_x + self._grid_len + self._margin_x)):
+            move_x = new - self._draw_maxw
+            is_redraw = True
+        if is_redraw:
+            self.move_map(move_y, move_x)
 
-    def get_grid_yx(self, y, x):
-        return self._grid[y][x]
+    def get_grid_yx(self, gy, gx):
+        return self._grid[gy][gx]
 
-    def get_hex(self, y, x):
+    def get_hex(self, gy, gx):
         result = []
-        hex_y, hex_x = self.get_grid_yx(y, x)
+        hex_y, hex_x = self.get_grid_yx(gy, gx)
         for i in range(self._grid_len):
             result.append([self.pad.inch(hex_y, hex_x+i), hex_y, hex_x+i])
         return result
@@ -422,8 +476,8 @@ class MapView(Widget):
     def set_hex(self, hex_data, hex_attr):
         pass
 
-    def highlight_hex(self, y, x, is_on):
-        hex_data = self.get_hex(y, x)
+    def highlight_hex(self, gy, gx, is_on):
+        hex_data = self.get_hex(gy, gx)
         for h in hex_data:
             hex_d, hex_y, hex_x = h
             self.pad.move(hex_y, hex_x)
