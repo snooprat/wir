@@ -43,7 +43,8 @@ class MainMenuCtr(spct.ViewController):
 class LogoView(spct.ViewLayout):
 
     def init_view(self):
-        self.newbox()
+        self.box = self.newbox()
+        self.box.set_title()
         self.tt = self.newbutton(self.height-2, self.width-2, 1, 1)
         self.tt.hl_color = self.get_color('logo_hl')
         self.tt.set_text(**l_title)

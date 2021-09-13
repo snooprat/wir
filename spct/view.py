@@ -121,12 +121,10 @@ class ViewLayout(object):
     def newbox(self, h=None, w=None, y=0, x=0):
         h = self._h if h is None else h
         w = self._w if w is None else w
-        box = self.win.derwin(h, w, y, x)
-        box.border()
-        return box
+        return BoxView(self, h, w, y, x)
 
-    def newbutton(self, h, w, y=0, x=0, text="Button"):
-        return ButtonView(self, h, w, y, x, text)
+    def newbutton(self, h, w, y=0, x=0, text="Button", bid='b0'):
+        return ButtonView(self, h, w, y, x, text, bid)
 
     def newmap(self, map_data, h, w, y=0, x=0):
         return MapView(self, map_data, h, w, y, x)
@@ -138,7 +136,7 @@ class Widget(object):
     """
 
     def __init__(self, layout, h, w, y, x, pad_h=None, pad_w=None):
-        self.layout = layout
+        self._layout = layout
         self._h = h
         self._w = w
         self._y = y
@@ -174,6 +172,10 @@ class Widget(object):
     @property
     def pad(self):
         return self._pad
+
+    @property
+    def layout(self):
+        return self._layout
 
     @property
     def pad_draw_y(self):
@@ -242,7 +244,7 @@ class LabelView(Widget):
     def __init__(self, layout, h, w, y, x):
         # run parent class init function.
         super().__init__(layout, h, w, y, x)
-        self._text = ''
+        self._text = 'Lable'
         self._h_align = 0
         self._v_align = 0
         self._attr = 0
@@ -258,14 +260,54 @@ class LabelView(Widget):
         self.update()
 
 
+class BoxView(object):
+
+    """A simple Box Border and Tile"""
+
+    def __init__(self, layout, h, w, y, x):
+        """TODO: to be defined.
+
+        :h: TODO
+        :w: TODO
+        :y: TODO
+        :x: TODO
+
+        """
+        self._layout = layout
+        self._h = h
+        self._w = w
+        self._y = y
+        self._x = x
+        self._box = self._layout.win.derwin(h, w, y, x)
+        self._box.border()
+
+    def set_title(self, text='TITLE', attr=CONST.A_BOLD):
+        # Add title
+        title_len = len(text) + 2
+        self._title = self._layout.newlabel(1, title_len, 0,
+                                            int((self._w-title_len)/2))
+        self._title.set_text(text, attr, h_align=CONST.AL_CENTER)
+
+
 class ButtonView(LabelView):
     """A simple Button"""
 
-    def __init__(self, layout, h, w, y, x, text):
+    def __init__(self, layout, h, w, y, x, text, bid):
         super().__init__(layout, h, w, y, x)
         self._focus = False
         self._focus_pad = self._newpad(self._h, self._w)
         self.set_text(text, h_align=CONST.AL_CENTER)
+        self._bid = bid
+
+    @property
+    def focus(self):
+        return self._focus
+
+    @focus.setter
+    def focus(self, value):
+        if self._focus != value:
+            self._focus = value
+            self.update_focus()
 
     def update_focus(self):
         if self._focus:
@@ -279,18 +321,11 @@ class ButtonView(LabelView):
         self._focus_pad.bkgd(CONST.A_REVERSE)
         self.update_focus()
 
-    @property
-    def focus(self):
-        return self._focus
-
-    @focus.setter
-    def focus(self, value):
-        if self._focus != value:
-            self._focus = value
-            self.update_focus()
-
     def get_text(self):
         return self._text
+
+    def get_id(self):
+        return self._bid
 
 
 class ListView(Widget):
