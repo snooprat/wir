@@ -9,8 +9,8 @@ import spct
 
 l_title = {
     'label': '`W`ar `i`n `R`ussia\nv0.0.1',
-    'v_align': spct.AL_MIDDLE,
-    'h_align': spct.AL_CENTER,
+    'v_align': spct.A_MIDDLE,
+    'h_align': spct.A_CENTER,
 }
 
 
@@ -43,10 +43,11 @@ class MainMenuCtr(spct.ViewController):
 class LogoView(spct.ViewLayout):
 
     def init_view(self):
+        hl_color = self.get_color('logo_hl')
         self.box = self.newbox()
-        self.box.set_title()
+        self.box.set_title(attr=hl_color)
         self.tt = self.newbutton(self.height-2, self.width-2, 1, 1)
-        self.tt.hl_color = self.get_color('logo_hl')
+        self.tt.hl_color = hl_color
         self.tt.set_text(**l_title)
         self.hide()
 
@@ -60,10 +61,12 @@ class LogoCtr(spct.ViewController):
         if event == 'Qq':
             self.hide()
         elif event == '2':
-            self.view.tt.focus = True
+            # self.view.tt.focus = True
+            self.view.tt.disable = True
             # btn1.set_text(h_align=spct.H_LEFT)
         elif event == '3':
-            self.view.tt.focus = False
+            # self.view.tt.focus = False
+            self.view.tt.disable = False
             # btn1.set_text(h_align=spct.H_RIGHT)
         elif event == spct.KEY_LEFT:
             self.title.show()
@@ -75,11 +78,21 @@ class WIRMapView(spct.ViewLayout):
     def init_view(self):
         with open('map.yml', 'r') as f:
             wirmap = yaml.safe_load(f)
+        with open('map', 'r')as f:
+            wirmap[spct.S_MAP_MAP] = f.read()
         self.map = self.newmap(wirmap, self.height, self.width)
         self.layer_unit = self.map.add_layer()
         self.layer_unit.addstr(5, 18, '[X]', self.get_color('unit1'))
         self.map.update(all_layers=True)
         self.hide()
+
+    @property
+    def cur_gy(self):
+        return self.map.cur_gy
+
+    @property
+    def cur_gx(self):
+        return self.map.cur_gx
 
     def move(self, new_y, new_x):
         self.map.move_map(new_y, new_x)
@@ -96,13 +109,13 @@ class WIRMapCtr(spct.ViewController):
         if event == 'Qq':
             self.hide()
         if event == spct.KEY_LEFT:
-            self.view.move_cusor(self.view.map.cur_gy, self.view.map.cur_gx-1)
+            self.view.move_cusor(self.view.cur_gy, self.view.cur_gx-1)
         if event == spct.KEY_RIGHT:
-            self.view.move_cusor(self.view.map.cur_gy, self.view.map.cur_gx+1)
+            self.view.move_cusor(self.view.cur_gy, self.view.cur_gx+1)
         if event == spct.KEY_UP:
-            self.view.move_cusor(self.view.map.cur_gy-1, self.view.map.cur_gx)
+            self.view.move_cusor(self.view.cur_gy-1, self.view.cur_gx)
         if event == spct.KEY_DOWN:
-            self.view.move_cusor(self.view.map.cur_gy+1, self.view.map.cur_gx)
+            self.view.move_cusor(self.view.cur_gy+1, self.view.cur_gx)
 
 
 def main(stdscr):

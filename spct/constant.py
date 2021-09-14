@@ -4,15 +4,27 @@ import curses
 # CONSTANT
 
 # Text attributes for printing the screen.
+A_BLINK = curses.A_BLINK
 A_BOLD = curses.A_BOLD
+A_DIM = curses.A_DIM
+A_INVIS = curses.A_INVIS
 A_NORMAL = curses.A_NORMAL
 A_REVERSE = curses.A_REVERSE
+A_STANDOUT = curses.A_STANDOUT
 A_UNDERLINE = curses.A_UNDERLINE
 
 # Text extract attributes for get properties.
 A_ATTRIBUTES = curses.A_ATTRIBUTES
 A_CHARTEXT = curses.A_CHARTEXT
 A_COLOR = curses.A_COLOR
+
+# Text align attributes.
+A_TOP = 1
+A_MIDDLE = 2
+A_BOTTOM = 3
+A_LEFT = 4
+A_CENTER = 5
+A_RIGHT = 6
 
 # Text colors for printing the screen.
 COLOR_BLACK = curses.COLOR_BLACK
@@ -131,39 +143,37 @@ KEY_MOUSE = curses.KEY_MOUSE
 KEY_RESIZE = curses.KEY_RESIZE
 KEY_MAX = curses.KEY_MAX
 
-# Text align attributes.
-AL_TOP = 1
-AL_MIDDLE = 2
-AL_BOTTOM = 3
-AL_LEFT = 4
-AL_CENTER = 5
-AL_RIGHT = 6
-
 # Special characters.
-CH_HIGHLIGHT = '`'
-CH_A_BOLD = 'A_BOLD'
-CH_A_NORMAL = 'A_NORMAL'
-CH_A_REVERSE = 'A_REVERSE'
-CH_A_UNDERLINE = 'A_UNDERLINE'
-CH_COLOR_DEFAULT = 'default'
-CH_COLOR_FG = 'fg'
-CH_COLOR_BG = 'bg'
-CH_COLOR_ATTR = 'attr'
-CH_MAP_MAPH = 'map_height'
-CH_MAP_MAPW = 'map_width'
-CH_MAP_MAP = 'map'
-CH_MAP_CELL = 'cell'
-CH_MAP_CHAR = 'char'
-CH_MAP_COLOR = 'color'
-CH_MAP_GRID_TYPE = 'grid_type'
-CH_MAP_GRIDH = 'grid_height'
-CH_MAP_GRIDW = 'grid_width'
-CH_MAP_GRID_LEN = 'grid_len'
-CH_MAP_GRID_OFFSET = 'grid_offset'
-CH_MAP_GRID_SPACE = 'grid_space'
-CH_MAP_MARGIN = 'map_margin'
-CH_MAP_GRIDY = 'grid_starty'
-CH_MAP_GRIDX = 'grid_startx'
+C_HIGHLIGHT = '`'
+
+# Key words
+S_A_BLINK = 'A_BLINK'
+S_A_BOLD = 'A_BOLD'
+S_A_DIM = 'A_DIM'
+S_A_INVIS = 'A_INVIS'
+S_A_NORMAL = 'A_NORMAL'
+S_A_REVERSE = 'A_REVERSE'
+S_A_STANDOUT = 'A_STANDOUT'
+S_A_UNDERLINE = 'A_UNDERLINE'
+S_COLOR_DEFAULT = 'default'
+S_COLOR_FG = 'fg'
+S_COLOR_BG = 'bg'
+S_COLOR_ATTR = 'attr'
+S_MAP_MAPH = 'map_height'
+S_MAP_MAPW = 'map_width'
+S_MAP_MAP = 'map'
+S_MAP_CELL = 'cell'
+S_MAP_CHAR = 'char'
+S_MAP_COLOR = 'color'
+S_MAP_GRID_TYPE = 'grid_type'
+S_MAP_GRIDH = 'grid_height'
+S_MAP_GRIDW = 'grid_width'
+S_MAP_GRID_LEN = 'grid_len'
+S_MAP_GRID_OFFSET = 'grid_offset'
+S_MAP_GRID_SPACE = 'grid_space'
+S_MAP_MARGIN = 'map_margin'
+S_MAP_GRIDY = 'grid_starty'
+S_MAP_GRIDX = 'grid_startx'
 
 # Default Value
 DEF_MAP_GRID_LEN = 3

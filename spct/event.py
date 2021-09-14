@@ -1,3 +1,6 @@
+from typing import Union
+
+
 class Event(object):
     """A class to hold information about a input event."""
 
@@ -5,7 +8,7 @@ class Event(object):
 class KeyEvent(Event):
     """ This event represents a key press."""
 
-    def __init__(self, key_code):
+    def __init__(self, key_code: int):
         self.key_code = key_code
 
     def __repr__(self):
@@ -14,7 +17,7 @@ class KeyEvent(Event):
     def __eq__(self, other):
         return self.is_key(other)
 
-    def is_key(self, ch):
+    def is_key(self, ch: Union[str, int]):
         if isinstance(ch, str):
             if chr(self.key_code) in ch:
                 return True
