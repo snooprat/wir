@@ -154,7 +154,6 @@ class ViewLayout(object):
 
     def init_view(self):
         """Overload view initial code"""
-        pass
 
     def set_ctr(self, ctr):
         self._viewctr = ctr
@@ -172,23 +171,25 @@ class ViewLayout(object):
     def hide(self):
         self.panel.hide()
 
-    def newlabel(self, h: int = None, w: int = None, y: int = 0, x: int = 0):
+    def newlabel(self, h: int = None, w: int = None, y: int = 0,
+                 x: int = 0) -> 'LabelView':
         # Pass object default value
         h = self._h if h is None else h
         w = self._w if w is None else w
         return LabelView(self, h, w, y, x)
 
     def newbox(self, h: int = None, w: int = None, y: int = 0, x: int = 0,
-               attr: int = 0):
+               attr: int = 0) -> 'BoxView':
         h = self._h if h is None else h
         w = self._w if w is None else w
         return BoxView(self, h, w, y, x, attr)
 
     def newbutton(self, h: int, w: int, y: int = 0, x: int = 0,
-                  text: str = "Button", bid: str = 'b0'):
+                  text: str = "Button", bid: str = 'b0') -> 'ButtonView':
         return ButtonView(self, h, w, y, x, text, bid)
 
-    def newmap(self, map_data: dict, h: int, w: int, y: int = 0, x: int = 0):
+    def newmap(self, map_data: dict, h: int, w: int, y: int = 0,
+               x: int = 0) -> 'MapView':
         return MapView(self, map_data, h, w, y, x)
 
 
@@ -323,7 +324,6 @@ class LabelView(Widget):
         self._h_align = self._h_align if h_align is None else h_align
         self.pad.clear()
         self.addwstr(self._text, self._attr, self._v_align, self._h_align)
-        self.update()
 
 
 class BoxView(object):
@@ -356,6 +356,12 @@ class BoxView(object):
                                             int((self._w-title_len)/2))
         self._title.set_text(text, attr, h_align=CONST.A_CENTER)
 
+    def set_border(self):
+        self._box.border()
+
+    def update(self):
+        self._title.update()
+
 
 class ButtonView(LabelView):
     """A simple Button"""
@@ -368,6 +374,8 @@ class ButtonView(LabelView):
         self._disabled_pad = self._newpad(self._h, self._w)
         self._bid = bid
         self._is_disabled = False
+        self._focus_attr = CONST.A_REVERSE
+        self._disabled_attr = CONST.A_DIM
         self.set_text(text, h_align=CONST.A_CENTER)
 
     @property
@@ -378,7 +386,6 @@ class ButtonView(LabelView):
     def focus(self, value):
         if self._is_focus != value:
             self._is_focus = value
-            self.update()
 
     @property
     def disable(self):
@@ -388,7 +395,6 @@ class ButtonView(LabelView):
     def disable(self, value):
         if self._is_disabled != value:
             self._is_disabled = value
-            self.update()
 
     def update(self):
         active_pad = self.pad
@@ -399,12 +405,15 @@ class ButtonView(LabelView):
         super().update(active_pad)
 
     def set_text(self, label: str = None, attr: int = None,
-                 v_align: int = None, h_align: int = None):
+                 v_align: int = None, h_align: int = None,
+                 f_attr: int = None, d_attr: int = None):
         super().set_text(label, attr, v_align, h_align)
         self.pad.overwrite(self._focus_pad)
-        self._focus_pad.bkgd(CONST.A_REVERSE)
         self.pad.overwrite(self._disabled_pad)
-        self._disabled_pad.bkgd(CONST.A_DIM)
+        f_attr = self._focus_attr if f_attr is None else f_attr
+        d_attr = self._disabled_attr if d_attr is None else d_attr
+        self._focus_pad.bkgd(f_attr)
+        self._disabled_pad.bkgd(d_attr)
 
     def get_text(self):
         return self._text
@@ -423,7 +432,7 @@ class ListView(Widget):
         self.len = 0
 
     def add_item(self):
-        pass
+        ...
     #     if self.len < self._h:
     #         newitem = ButtonView(self.layout, 1, self._w, self.len, 0)
     #         if self.head is None:
@@ -436,7 +445,7 @@ class ListView(Widget):
     #             newitem.btn_u = item
 
     def clear_item(self):
-        pass
+        ...
 
 
 class MapView(Widget):
@@ -510,7 +519,6 @@ class MapView(Widget):
                 color = self.layout.get_color(color_name)
                 map_char = c[CONST.S_MAP_CHAR]
                 self.map_layer.addch(map_char, color)
-        self.update()
 
     def init_grid(self):
         grid_h = self._map[CONST.S_MAP_GRIDH]
@@ -597,7 +605,7 @@ class MapView(Widget):
         return result
 
     def set_hex(self, hex_data, hex_attr):
-        pass
+        ...
 
     def highlight_hex(self, gy: int, gx: int, is_on: bool):
         hex_data = self.get_hex(gy, gx)
@@ -636,4 +644,4 @@ class MapLayer(object):
 
 
 class TabView(Widget):
-    pass
+    ...

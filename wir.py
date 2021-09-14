@@ -46,9 +46,11 @@ class LogoView(spct.ViewLayout):
         hl_color = self.get_color('logo_hl')
         self.box = self.newbox()
         self.box.set_title(attr=hl_color)
+        self.box.update()
         self.tt = self.newbutton(self.height-2, self.width-2, 1, 1)
         self.tt.hl_color = hl_color
-        self.tt.set_text(**l_title)
+        self.tt.set_text(**l_title, d_attr=self.get_color('disable'))
+        self.tt.update()
         self.hide()
 
 
@@ -63,14 +65,15 @@ class LogoCtr(spct.ViewController):
         elif event == '2':
             # self.view.tt.focus = True
             self.view.tt.disable = True
-            # btn1.set_text(h_align=spct.H_LEFT)
+            # self.view.tt.set_text(h_align=spct.A_LEFT)
+            self.view.tt.update()
         elif event == '3':
             # self.view.tt.focus = False
             self.view.tt.disable = False
-            # btn1.set_text(h_align=spct.H_RIGHT)
+            # self.view.tt.set_text(h_align=spct.A_RIGHT)
+            self.view.tt.update()
         elif event == spct.KEY_LEFT:
             self.title.show()
-        spct.update()
 
 
 class WIRMapView(spct.ViewLayout):
@@ -137,7 +140,7 @@ def main(stdscr):
     titleC.set_logo(logoC)
     titleC.set_map(mapC)
     logoC.set_title(titleC)
-    spct.update()
+    # spct.update()
 
     spct.run()
 
