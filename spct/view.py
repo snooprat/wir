@@ -1,6 +1,6 @@
 import curses
 import curses.panel as cpanel
-from typing import Optional
+from typing import Union
 
 import spct.constant as CONST
 from spct.event import KeyEvent
@@ -77,7 +77,7 @@ def _align_text(text: str, nrows: int, ncols: int, v_align: int, h_align: int,
 class ColorMap(object):
     """Manage colors"""
 
-    def __init__(self, colors: Optional[dict] = None):
+    def __init__(self, colors: dict = None):
         self._cid = 1
         self._colors = {}
         self._attr = {
@@ -100,7 +100,7 @@ class ColorMap(object):
         self._cid += 1
         return self._colors[sel]
 
-    def add_color_map(self, colors: Optional[dict]):
+    def add_color_map(self, colors: Union[dict, None]):
         if colors:
             for k, v in colors.items():
                 fg = v.get(CONST.S_COLOR_FG, CONST.COLOR_WHITE)
@@ -119,7 +119,7 @@ class ViewLayout(object):
     """A view layout is a display area to display widget."""
 
     def __init__(self, h: int, w: int, y: int = 0, x: int = 0,
-                 colors: Optional[ColorMap] = None):
+                 colors: ColorMap = None):
         self._h = h
         self._w = w
         self._y = y
@@ -172,15 +172,14 @@ class ViewLayout(object):
     def hide(self):
         self.panel.hide()
 
-    def newlabel(self, h: Optional[int] = None, w: Optional[int] = None,
-                 y: int = 0, x: int = 0):
+    def newlabel(self, h: int = None, w: int = None, y: int = 0, x: int = 0):
         # Pass object default value
         h = self._h if h is None else h
         w = self._w if w is None else w
         return LabelView(self, h, w, y, x)
 
-    def newbox(self, h: Optional[int] = None, w: Optional[int] = None,
-               y=0, x=0, attr: int = 0):
+    def newbox(self, h: int = None, w: int = None, y: int = 0, x: int = 0,
+               attr: int = 0):
         h = self._h if h is None else h
         w = self._w if w is None else w
         return BoxView(self, h, w, y, x, attr)
@@ -199,7 +198,7 @@ class Widget(object):
     """
 
     def __init__(self, layout: ViewLayout, h: int, w: int, y: int, x: int,
-                 pad_h: Optional[int] = None, pad_w: Optional[int] = None):
+                 pad_h: int = None, pad_w: int = None):
         self._layout = layout
         self._h = h
         self._w = w
@@ -290,8 +289,8 @@ class Widget(object):
         for i, text in enumerate(lines):
             self.addhstr(text, i, 0, attr)
 
-    def update(self, pad=None, win=None, pad_y: Optional[int] = None,
-               pad_x: Optional[int] = None):
+    def update(self, pad=None, win=None,
+               pad_y: int = None, pad_x: int = None):
         """Overwrite Widget pad text to Layout window area."""
         pad = self.pad if pad is None else pad
         win = self.layout.win if win is None else win
@@ -315,9 +314,8 @@ class LabelView(Widget):
         self._v_align = 0
         self._attr = 0
 
-    def set_text(self, label: Optional[str] = None,
-                 attr: Optional[int] = None, v_align: Optional[int] = None,
-                 h_align: Optional[int] = None):
+    def set_text(self, label: str = None, attr: int = None,
+                 v_align: int = None, h_align: int = None):
         """Set Label text"""
         self._text = self._text if label is None else label
         self._attr = self._attr if attr is None else attr
@@ -400,9 +398,8 @@ class ButtonView(LabelView):
             active_pad = self._focus_pad
         super().update(active_pad)
 
-    def set_text(self, label: Optional[str] = None,
-                 attr: Optional[int] = None, v_align: Optional[int] = None,
-                 h_align: Optional[int] = None):
+    def set_text(self, label: str = None, attr: int = None,
+                 v_align: int = None, h_align: int = None):
         super().set_text(label, attr, v_align, h_align)
         self.pad.overwrite(self._focus_pad)
         self._focus_pad.bkgd(CONST.A_REVERSE)
@@ -545,8 +542,8 @@ class MapView(Widget):
         self._layers.append(layer)
         return layer
 
-    def update(self, pad=None, win=None, pad_y: Optional[int] = None,
-               pad_x: Optional[int] = None, all_layers: bool = False):
+    def update(self, pad=None, win=None, pad_y: int = None, pad_x: int = None,
+               all_layers: bool = False):
         if all_layers:
             for layer in self._layers:
                 if layer.is_visible:
