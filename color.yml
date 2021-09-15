@@ -17,4 +17,4 @@ unit1:
   fg: 3
   attr: A_BOLD
 disable:
-  fg: 235
+  fg: 8

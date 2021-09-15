@@ -1,21 +1,9 @@
 import curses
 import curses.panel as cpanel
-from typing import Union
 
 import spct.constant as CONST
 from spct.event import KeyEvent
-
-
-def chattr(ch: int) -> int:
-    return ch & CONST.A_ATTRIBUTES
-
-
-def chcolor(ch: int) -> int:
-    return ch & CONST.A_COLOR
-
-
-def chtext(ch: int) -> int:
-    return ch & CONST.A_CHARTEXT
+from spct.color import ColorMap, chattr
 
 
 def _split_text(text: str, nrows: int, ncols: int,
@@ -74,47 +62,6 @@ def _align_text(text: str, nrows: int, ncols: int, v_align: int, h_align: int,
     return result
 
 
-class ColorMap(object):
-    """Manage colors"""
-
-    def __init__(self, colors: dict = None):
-        self._cid = 1
-        self._colors = {}
-        self._attr = {
-            CONST.S_A_BLINK: CONST.A_BLINK,
-            CONST.S_A_BOLD: CONST.A_BOLD,
-            CONST.S_A_DIM: CONST.A_DIM,
-            CONST.S_A_NORMAL: CONST.A_NORMAL,
-            CONST.S_A_REVERSE: CONST.A_REVERSE,
-            CONST.S_A_STANDOUT: CONST.A_STANDOUT,
-            CONST.S_A_UNDERLINE: CONST.A_UNDERLINE
-        }
-        self.add_color(CONST.S_COLOR_DEFAULT)
-        self.add_color_map(colors)
-
-    def add_color(self, sel: str, fg: int = CONST.COLOR_WHITE,
-                  bg: int = CONST.COLOR_BLACK,
-                  attr: int = CONST.A_NORMAL) -> int:
-        curses.init_pair(self._cid, fg, bg)
-        self._colors[sel] = curses.color_pair(self._cid) | attr
-        self._cid += 1
-        return self._colors[sel]
-
-    def add_color_map(self, colors: Union[dict, None]):
-        if colors:
-            for k, v in colors.items():
-                fg = v.get(CONST.S_COLOR_FG, CONST.COLOR_WHITE)
-                bg = v.get(CONST.S_COLOR_BG, CONST.COLOR_BLACK)
-                attr = self.get_attr(v.get(CONST.S_COLOR_ATTR))
-                self.add_color(k, fg, bg, attr)
-
-    def get_attr(self, attr: str) -> int:
-        return self._attr.get(attr, CONST.A_NORMAL)
-
-    def get_color(self, sel: str = CONST.S_COLOR_DEFAULT) -> int:
-        return self._colors.get(sel, self._colors[CONST.S_COLOR_DEFAULT])
-
-
 class ViewLayout(object):
     """A view layout is a display area to display widget."""
 
@@ -163,7 +110,10 @@ class ViewLayout(object):
         self.viewctr.on_event(ch)
 
     def get_color(self, color: str) -> int:
-        return self._colors.get_color(color)
+        result = -1
+        if self._colors:
+            result = self._colors.get_color(color)
+        return result
 
     def show(self):
         self.panel.show()

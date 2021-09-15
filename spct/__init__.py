@@ -5,8 +5,9 @@ import curses
 import curses.panel as cpanel
 
 from spct.constant import *
-from spct.view import ColorMap, ViewLayout, chattr, chcolor, chtext
+from spct.view import ViewLayout
 from spct.viewctr import ViewController
+from spct.color import ColorMap, chattr, chcolor, chtext
 
 
 def update():
@@ -27,6 +28,10 @@ def run():
 
 def init():
     curses.curs_set(0)
+
+
+def init_colors(colors: dict) -> ColorMap:
+    return ColorMap(colors)
 
 
 def wrapper(*args, **kwds):

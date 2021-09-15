@@ -129,7 +129,7 @@ def main(stdscr):
     spct.init()
     with open('color.yml', 'r') as f:
         f_color = yaml.safe_load(f)
-    wircolor = spct.ColorMap(f_color)
+    wircolor = spct.init_colors(f_color)
 
     titleV = MainMenuView(WIN_H-MENU_H, WIN_W)
     titleC = MainMenuCtr(titleV)
