@@ -107,7 +107,8 @@ class ViewLayout(object):
 
     def run_ctr(self):
         ch = KeyEvent(self.win.getch())
-        self.viewctr.on_event(ch)
+        if self.viewctr:
+            self.viewctr.on_event(ch)
 
     def get_color(self, color: str) -> int:
         result = -1
@@ -138,23 +139,50 @@ class ViewLayout(object):
                   text: str = "Button", bid: str = 'b0') -> 'ButtonView':
         return ButtonView(self, h, w, y, x, text, bid)
 
-    def newmap(self, map_data: dict, h: int, w: int, y: int = 0,
+    def newlist(self, num: int, h: int = None, w: int = None, y: int = 0,
+                x: int = 0) -> 'ListView':
+        h = self._h if h is None else h
+        w = self._w if w is None else w
+        return ListView(self, num, h, w, y, x)
+
+    def newmap(self, map_data: dict, h: int = None, w: int = None, y: int = 0,
                x: int = 0) -> 'MapView':
+        h = self._h if h is None else h
+        w = self._w if w is None else w
         return MapView(self, map_data, h, w, y, x)
 
 
-class Widget(object):
+class BaseWidget(object):
+
+    """A basic widget class"""
+
+    def __init__(self, layout: ViewLayout, h: int, w: int, y: int, x: int):
+        """
+        :layout: Layout create this widget
+        :h: widget height
+        :w: widget width
+        :y: widget position y
+        :x: widget position x
+        """
+        self._layout = layout
+        self._h = h
+        self._w = w
+        self._y = y
+        self._x = x
+
+    @property
+    def layout(self):
+        return self._layout
+
+
+class Widget(BaseWidget):
     """
     A Widget is a re-usable component that can be used to create a simple GUI.
     """
 
     def __init__(self, layout: ViewLayout, h: int, w: int, y: int, x: int,
                  pad_h: int = None, pad_w: int = None):
-        self._layout = layout
-        self._h = h
-        self._w = w
-        self._y = y
-        self._x = x
+        super().__init__(layout, h, w, y, x)
         self._pad_draw_y = 0
         self._pad_draw_x = 0
         self._padh = h if pad_h is None else pad_h
@@ -183,13 +211,13 @@ class Widget(object):
         self.hl_color = CONST.A_BOLD
         self.hl_mark = CONST.C_HIGHLIGHT
 
+    def _newpad(self, h: int, w: int):
+        # Pad height +1 to fix last space cannot addstr.
+        return curses.newpad(h+1, w)
+
     @property
     def pad(self):
         return self._pad
-
-    @property
-    def layout(self):
-        return self._layout
 
     @property
     def pad_draw_y(self):
@@ -217,10 +245,6 @@ class Widget(object):
             value = max_x if max_x > 0 else 0
         self._pad_draw_x = value
 
-    def _newpad(self, h: int, w: int):
-        # Pad height +1 to fix last space cannot addstr.
-        return curses.newpad(h+1, w)
-
     def addhstr(self, string: str, y: int = 0, x: int = 0, attr: int = 0):
         """Add highlight text"""
         text = string.split(self.hl_mark)
@@ -240,8 +264,7 @@ class Widget(object):
         for i, text in enumerate(lines):
             self.addhstr(text, i, 0, attr)
 
-    def update(self, pad=None, win=None,
-               pad_y: int = None, pad_x: int = None):
+    def update(self, pad=None, win=None, pad_y: int = None, pad_x: int = None):
         """Overwrite Widget pad text to Layout window area."""
         pad = self.pad if pad is None else pad
         win = self.layout.win if win is None else win
@@ -276,34 +299,22 @@ class LabelView(Widget):
         self.addwstr(self._text, self._attr, self._v_align, self._h_align)
 
 
-class BoxView(object):
+class BoxView(BaseWidget):
 
     """A simple Box Border and Tile"""
 
     def __init__(self, layout: ViewLayout, h: int, w: int, y: int, x: int,
                  attr: int):
-        """TODO: to be defined.
-
-        :h: TODO
-        :w: TODO
-        :y: TODO
-        :x: TODO
-
-        """
-        self._layout = layout
-        self._h = h
-        self._w = w
-        self._y = y
-        self._x = x
-        self._box = self._layout.win.derwin(h, w, y, x)
+        super().__init__(layout, h, w, y, x)
+        self._box = self.layout.win.derwin(h, w, y, x)
         self._box.border()
         self._box.bkgd(attr)
 
     def set_title(self, text: str = 'TITLE', attr: int = CONST.A_BOLD):
         # Add title
         title_len = len(text) + 2
-        self._title = self._layout.newlabel(1, title_len, 0,
-                                            int((self._w-title_len)/2))
+        self._title = self.layout.newlabel(1, title_len, 0,
+                                           int((self._w-title_len)/2))
         self._title.set_text(text, attr, h_align=CONST.A_CENTER)
 
     def set_border(self):
@@ -346,13 +357,13 @@ class ButtonView(LabelView):
         if self._is_disabled != value:
             self._is_disabled = value
 
-    def update(self):
+    def update(self, win=None):
         active_pad = self.pad
         if self._is_disabled:
             active_pad = self._disabled_pad
         elif self._is_focus:
             active_pad = self._focus_pad
-        super().update(active_pad)
+        super().update(active_pad, win)
 
     def set_text(self, label: str = None, attr: int = None,
                  v_align: int = None, h_align: int = None,
@@ -375,27 +386,85 @@ class ButtonView(LabelView):
 class ListView(Widget):
     """A simple List"""
 
-    def __init__(self, layout: ViewLayout, h: int, w: int, y: int, x: int):
-        super().__init__(layout, h, w, y, x)
-        self.head = None
-        self.current = None
-        self.len = 0
+    def __init__(self, layout: ViewLayout, num: int, h: int, w: int, y: int,
+                 x: int):
+        super().__init__(layout, h, w, y, x, num)
+        self._list = []
+        self._cur_id = 0
+        self._len = num
+        self._newitem_y = 0
+        self._dispal_y = 0
 
-    def add_item(self):
-        ...
-    #     if self.len < self._h:
-    #         newitem = ButtonView(self.layout, 1, self._w, self.len, 0)
-    #         if self.head is None:
-    #             self.head = newitem
-    #         else:
-    #             item = self.head
-    #             while item.btn_d is not None:
-    #                 item = item.btn_d
-    #             item.btn_d = newitem
-    #             newitem.btn_u = item
+    @property
+    def listdrawy(self):
+        return self.pad_draw_y
 
-    def clear_item(self):
-        ...
+    @listdrawy.setter
+    def listdrawy(self, value):
+        self.pad_draw_y = value
+
+    @property
+    def cur_id(self):
+        return self._cur_id
+
+    def _is_valid(self, i_id: int) -> bool:
+        if 0 <= i_id < self._newitem_y:
+            return True
+        else:
+            return False
+
+    def add_item(self, label: str = None, attr: int = None,
+                 v_align: int = None, h_align: int = CONST.A_LEFT,
+                 f_attr: int = None, d_attr: int = None) -> int:
+        if (item_y := self._newitem_y) < self._len:
+            newitem = self.layout.newbutton(1, self._w, item_y, 0)
+            newitem.set_text(label, attr, v_align, h_align, f_attr, d_attr)
+            self._list.append(newitem)
+            self._newitem_y += 1
+            return item_y
+        else:
+            return 0
+
+    def get_item(self, i_id: int) -> ButtonView:
+        if self._is_valid(i_id):
+            return self._list[i_id]
+        else:
+            return self._list[0]
+
+    def get_cur_item(self):
+        return self.get_item(self._cur_id)
+
+    def move_cur(self, i_id: int):
+        if self._is_valid(i_id):
+            # Hilight cursor
+            prev_id = self._cur_id
+            self._cur_id = i_id
+            self.get_item(prev_id).focus = False
+            self.get_cur_item().focus = True
+            # Move list
+            if self._cur_id > (self.listdrawy + (self._h-1)):
+                self.move_list(self._cur_id - (self._h-1))
+            elif self._cur_id < self.listdrawy:
+                self.move_list(self._cur_id)
+
+    def update(self, i_id: int = CONST.S_UPDATE_ALL):
+        if i_id is CONST.S_UPDATE_ALL:
+            for i in self._list:
+                i.update(win=self.pad)
+        elif i_id is not CONST.S_UPDATE_NONE:
+            self.get_item(i_id).update(win=self.pad)
+        super().update()
+
+    def move_list(self, y: int):
+        self.listdrawy = y
+
+
+class ScrollBarView(object):
+
+    """A simple scroll bar"""
+
+    def __init__(self):
+        """TODO: to be defined. """
 
 
 class MapView(Widget):
@@ -414,7 +483,6 @@ class MapView(Widget):
         self._gridh = 0
         self._gridw = 0
         self._layers = []
-        self.map_layer = None
         self.init_map()
         self.init_grid()
 
@@ -462,13 +530,13 @@ class MapView(Widget):
         mapdata = self._map[CONST.S_MAP_MAP]
         self._margin = self._map[CONST.S_MAP_MARGIN]
         cells = self._map[CONST.S_MAP_CELL]
-        self.map_layer = self.add_layer()  # create a base map
+        base_layer = self.add_layer()  # create a base map
         for t in mapdata:
             if (c := cells.get(t, None)):
                 color_name = c.get(CONST.S_MAP_COLOR)
                 color = self.layout.get_color(color_name)
                 map_char = c[CONST.S_MAP_CHAR]
-                self.map_layer.addch(map_char, color)
+                base_layer.addch(map_char, color)
 
     def init_grid(self):
         grid_h = self._map[CONST.S_MAP_GRIDH]
@@ -554,7 +622,7 @@ class MapView(Widget):
             result.append([self.pad.inch(hex_y, hex_x+i), hex_y, hex_x+i])
         return result
 
-    def set_hex(self, hex_data, hex_attr):
+    def set_hex(self):
         ...
 
     def highlight_hex(self, gy: int, gx: int, is_on: bool):

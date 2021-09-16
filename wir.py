@@ -21,6 +21,18 @@ class MainMenuView(spct.ViewLayout):
         self.win.addstr(4, 20, '12345')
         self.win.hline('h', 5)
         self.win.vline('a', 5)
+        self.al = self.newlist(10, 6, 8, 5, 5)
+        self.al.add_item('item1')
+        self.al.add_item('item2')
+        self.al.add_item('item3')
+        self.al.add_item('item4')
+        self.al.add_item('item5')
+        self.al.add_item('item6')
+        self.al.add_item('item7')
+        self.al.add_item('item8')
+        self.al.add_item('item9')
+        self.al.add_item('itemA')
+        self.al.update()
 
 
 class MainMenuCtr(spct.ViewController):
@@ -38,6 +50,12 @@ class MainMenuCtr(spct.ViewController):
             self.logo.show()
         elif event == '2':
             self.wirmap.show()
+        elif event == spct.KEY_DOWN:
+            self.view.al.move_cur(self.view.al.cur_id + 1)
+            self.view.al.update()
+        elif event == spct.KEY_UP:
+            self.view.al.move_cur(self.view.al.cur_id - 1)
+            self.view.al.update()
 
 
 class LogoView(spct.ViewLayout):
@@ -83,7 +101,7 @@ class WIRMapView(spct.ViewLayout):
             wirmap = yaml.safe_load(f)
         with open('map', 'r')as f:
             wirmap[spct.S_MAP_MAP] = f.read()
-        self.map = self.newmap(wirmap, self.height, self.width)
+        self.map = self.newmap(wirmap, self.height-2, self.width-2, 1, 1)
         self.layer_unit = self.map.add_layer()
         self.layer_unit.addstr(5, 18, '[X]', self.get_color('unit1'))
         self.map.update(all_layers=True)

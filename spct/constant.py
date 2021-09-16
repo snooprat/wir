@@ -146,7 +146,7 @@ KEY_MAX = curses.KEY_MAX
 # Special characters.
 C_HIGHLIGHT = '`'
 
-# Key words
+# Symbols
 S_A_BLINK = 'A_BLINK'
 S_A_BOLD = 'A_BOLD'
 S_A_DIM = 'A_DIM'
@@ -174,6 +174,8 @@ S_MAP_GRID_SPACE = 'grid_space'
 S_MAP_MARGIN = 'map_margin'
 S_MAP_GRIDY = 'grid_starty'
 S_MAP_GRIDX = 'grid_startx'
+S_UPDATE_ALL = -1
+S_UPDATE_NONE = -2
 
 # Default Value
 DEF_MAP_GRID_LEN = 3
