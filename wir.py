@@ -11,6 +11,7 @@ l_title = {
     'label': '`W`ar `i`n `R`ussia\nv0.0.1',
     'v_align': spct.A_MIDDLE,
     'h_align': spct.A_CENTER,
+    'd_attr':  'disable',
 }
 
 
@@ -67,7 +68,7 @@ class LogoView(spct.ViewLayout):
         self.box.update()
         self.tt = self.newbutton(self.height-2, self.width-2, 1, 1)
         self.tt.hl_color = hl_color
-        self.tt.set_text(**l_title, d_attr=self.get_color('disable'))
+        self.tt.set_text(**l_title)
         self.tt.update()
         self.hide()
 

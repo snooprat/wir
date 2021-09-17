@@ -1,7 +1,11 @@
 import curses
+from typing import Union
 
 
 # CONSTANT
+
+# Type
+T_COLOR = Union[str, int]
 
 # Text attributes for printing the screen.
 A_BLINK = curses.A_BLINK
@@ -155,6 +159,7 @@ S_A_NORMAL = 'A_NORMAL'
 S_A_REVERSE = 'A_REVERSE'
 S_A_STANDOUT = 'A_STANDOUT'
 S_A_UNDERLINE = 'A_UNDERLINE'
+S_COLOR_ERROR = -1
 S_COLOR_DEFAULT = 'default'
 S_COLOR_FG = 'fg'
 S_COLOR_BG = 'bg'

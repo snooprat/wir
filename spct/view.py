@@ -110,9 +110,11 @@ class ViewLayout(object):
         if self.viewctr:
             self.viewctr.on_event(ch)
 
-    def get_color(self, color: str) -> int:
-        result = -1
-        if self._colors:
+    def get_color(self, color: CONST.T_COLOR) -> int:
+        result = CONST.S_COLOR_ERROR
+        if isinstance(color, int):
+            result = color
+        elif self._colors:
             result = self._colors.get_color(color)
         return result
 
@@ -130,7 +132,7 @@ class ViewLayout(object):
         return LabelView(self, h, w, y, x)
 
     def newbox(self, h: int = None, w: int = None, y: int = 0, x: int = 0,
-               attr: int = 0) -> 'BoxView':
+               attr: CONST.T_COLOR = 0) -> 'BoxView':
         h = self._h if h is None else h
         w = self._w if w is None else w
         return BoxView(self, h, w, y, x, attr)
@@ -173,6 +175,9 @@ class BaseWidget(object):
     @property
     def layout(self):
         return self._layout
+
+    def get_color(self, color: CONST.T_COLOR) -> int:
+        return self.layout.get_color(color)
 
 
 class Widget(BaseWidget):
@@ -288,11 +293,12 @@ class LabelView(Widget):
         self._v_align = 0
         self._attr = 0
 
-    def set_text(self, label: str = None, attr: int = None,
+    def set_text(self, label: str = None, attr: CONST.T_COLOR = None,
                  v_align: int = None, h_align: int = None):
         """Set Label text"""
         self._text = self._text if label is None else label
         self._attr = self._attr if attr is None else attr
+        self._attr = self.get_color(self._attr)
         self._v_align = self._v_align if v_align is None else v_align
         self._h_align = self._h_align if h_align is None else h_align
         self.pad.clear()
@@ -304,13 +310,15 @@ class BoxView(BaseWidget):
     """A simple Box Border and Tile"""
 
     def __init__(self, layout: ViewLayout, h: int, w: int, y: int, x: int,
-                 attr: int):
+                 attr: CONST.T_COLOR):
         super().__init__(layout, h, w, y, x)
         self._box = self.layout.win.derwin(h, w, y, x)
         self._box.border()
+        attr = self.get_color(attr)
         self._box.bkgd(attr)
 
-    def set_title(self, text: str = 'TITLE', attr: int = CONST.A_BOLD):
+    def set_title(self, text: str = 'TITLE',
+                  attr: CONST.T_COLOR = CONST.A_BOLD):
         # Add title
         title_len = len(text) + 2
         self._title = self.layout.newlabel(1, title_len, 0,
@@ -365,14 +373,16 @@ class ButtonView(LabelView):
             active_pad = self._focus_pad
         super().update(active_pad, win)
 
-    def set_text(self, label: str = None, attr: int = None,
+    def set_text(self, label: str = None, attr: CONST.T_COLOR = None,
                  v_align: int = None, h_align: int = None,
-                 f_attr: int = None, d_attr: int = None):
+                 f_attr: CONST.T_COLOR = None, d_attr: CONST.T_COLOR = None):
         super().set_text(label, attr, v_align, h_align)
         self.pad.overwrite(self._focus_pad)
         self.pad.overwrite(self._disabled_pad)
         f_attr = self._focus_attr if f_attr is None else f_attr
         d_attr = self._disabled_attr if d_attr is None else d_attr
+        f_attr = self.get_color(f_attr)
+        d_attr = self.get_color(d_attr)
         self._focus_pad.bkgd(f_attr)
         self._disabled_pad.bkgd(d_attr)
 
@@ -413,9 +423,10 @@ class ListView(Widget):
         else:
             return False
 
-    def add_item(self, label: str = None, attr: int = None,
+    def add_item(self, label: str = None, attr: CONST.T_COLOR = None,
                  v_align: int = None, h_align: int = CONST.A_LEFT,
-                 f_attr: int = None, d_attr: int = None) -> int:
+                 f_attr: CONST.T_COLOR = None,
+                 d_attr: CONST.T_COLOR = None) -> int:
         if (item_y := self._newitem_y) < self._len:
             newitem = self.layout.newbutton(1, self._w, item_y, 0)
             newitem.set_text(label, attr, v_align, h_align, f_attr, d_attr)
@@ -534,7 +545,8 @@ class MapView(Widget):
         for t in mapdata:
             if (c := cells.get(t, None)):
                 color_name = c.get(CONST.S_MAP_COLOR)
-                color = self.layout.get_color(color_name)
+                color = self.get_color(color_name)
+                # raise Exception(color, color_name, c)
                 map_char = c[CONST.S_MAP_CHAR]
                 base_layer.addch(map_char, color)
 
