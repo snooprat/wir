@@ -149,6 +149,9 @@ KEY_MAX = curses.KEY_MAX
 
 # Special characters.
 C_HIGHLIGHT = '`'
+# C_UPARROW = curses.ACS_UARROW
+# C_DOWNARROW = curses.ACS_DARROW
+# C_SLIDER = curses.ACS_VLINE
 
 # Symbols
 S_A_BLINK = 'A_BLINK'

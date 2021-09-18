@@ -22,7 +22,7 @@ class MainMenuView(spct.ViewLayout):
         self.win.addstr(4, 20, '12345')
         self.win.hline('h', 5)
         self.win.vline('a', 5)
-        self.al = self.newlist(10, 6, 8, 5, 5)
+        self.al = self.newlist(10, 6, 8, 5, 5, 2)
         self.al.add_item('item1')
         self.al.add_item('item2')
         self.al.add_item('item3')

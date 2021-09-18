@@ -1,13 +1,13 @@
 import curses
 import curses.panel as cpanel
 
-import spct.constant as CONST
+import spct.constant as const
 from spct.event import KeyEvent
 from spct.color import ColorMap, chattr
 
 
 def _split_text(text: str, nrows: int, ncols: int,
-                strong: str = CONST.C_HIGHLIGHT) -> list[str]:
+                strong: str = const.C_HIGHLIGHT) -> list[str]:
     """Split text in lines"""
     lines = text.splitlines()
     result = []
@@ -35,25 +35,25 @@ def _split_text(text: str, nrows: int, ncols: int,
 
 
 def _align_text(text: str, nrows: int, ncols: int, v_align: int, h_align: int,
-                ignore: str = CONST.C_HIGHLIGHT) -> list[str]:
+                ignore: str = const.C_HIGHLIGHT) -> list[str]:
     """Align text"""
     lines = _split_text(text, nrows, ncols, ignore)
     lines_num = len(lines)
     result = []
     # Vertical align
-    if v_align is CONST.A_MIDDLE:
+    if v_align is const.A_MIDDLE:
         lines_add = (nrows-lines_num) // 2
-    elif v_align is CONST.A_BOTTOM:
+    elif v_align is const.A_BOTTOM:
         lines_add = (nrows-lines_num)
     else:
         lines_add = 0
     v_aligned_lines = [''] * lines_add
     v_aligned_lines.extend(lines)
     # Horizontal align
-    if h_align is CONST.A_CENTER:
+    if h_align is const.A_CENTER:
         for line in v_aligned_lines:
             result.append(line.center(ncols+line.count(ignore)))
-    elif h_align is CONST.A_RIGHT:
+    elif h_align is const.A_RIGHT:
         for line in v_aligned_lines:
             result.append(line.rjust(ncols+line.count(ignore)))
     else:
@@ -110,8 +110,8 @@ class ViewLayout(object):
         if self.viewctr:
             self.viewctr.on_event(ch)
 
-    def get_color(self, color: CONST.T_COLOR) -> int:
-        result = CONST.S_COLOR_ERROR
+    def get_color(self, color: const.T_COLOR) -> int:
+        result = const.S_COLOR_ERROR
         if isinstance(color, int):
             result = color
         elif self._colors:
@@ -132,7 +132,7 @@ class ViewLayout(object):
         return LabelView(self, h, w, y, x)
 
     def newbox(self, h: int = None, w: int = None, y: int = 0, x: int = 0,
-               attr: CONST.T_COLOR = 0) -> 'BoxView':
+               attr: const.T_COLOR = 0) -> 'BoxView':
         h = self._h if h is None else h
         w = self._w if w is None else w
         return BoxView(self, h, w, y, x, attr)
@@ -142,10 +142,10 @@ class ViewLayout(object):
         return ButtonView(self, h, w, y, x, text, bid)
 
     def newlist(self, num: int, h: int = None, w: int = None, y: int = 0,
-                x: int = 0) -> 'ListView':
+                x: int = 0, margin: int = 0) -> 'ListView':
         h = self._h if h is None else h
         w = self._w if w is None else w
-        return ListView(self, num, h, w, y, x)
+        return ListView(self, num, h, w, y, x, margin)
 
     def newmap(self, map_data: dict, h: int = None, w: int = None, y: int = 0,
                x: int = 0) -> 'MapView':
@@ -176,7 +176,7 @@ class BaseWidget(object):
     def layout(self):
         return self._layout
 
-    def get_color(self, color: CONST.T_COLOR) -> int:
+    def get_color(self, color: const.T_COLOR) -> int:
         return self.layout.get_color(color)
 
 
@@ -213,8 +213,8 @@ class Widget(BaseWidget):
         # functions and colors
         self.addstr = self.pad.addstr
         self.addch = self.pad.addch
-        self.hl_color = CONST.A_BOLD
-        self.hl_mark = CONST.C_HIGHLIGHT
+        self.hl_color = const.A_BOLD
+        self.hl_mark = const.C_HIGHLIGHT
 
     def _newpad(self, h: int, w: int):
         # Pad height +1 to fix last space cannot addstr.
@@ -293,7 +293,7 @@ class LabelView(Widget):
         self._v_align = 0
         self._attr = 0
 
-    def set_text(self, label: str = None, attr: CONST.T_COLOR = None,
+    def set_text(self, label: str = None, attr: const.T_COLOR = None,
                  v_align: int = None, h_align: int = None):
         """Set Label text"""
         self._text = self._text if label is None else label
@@ -310,7 +310,7 @@ class BoxView(BaseWidget):
     """A simple Box Border and Tile"""
 
     def __init__(self, layout: ViewLayout, h: int, w: int, y: int, x: int,
-                 attr: CONST.T_COLOR):
+                 attr: const.T_COLOR):
         super().__init__(layout, h, w, y, x)
         self._box = self.layout.win.derwin(h, w, y, x)
         self._box.border()
@@ -318,12 +318,12 @@ class BoxView(BaseWidget):
         self._box.bkgd(attr)
 
     def set_title(self, text: str = 'TITLE',
-                  attr: CONST.T_COLOR = CONST.A_BOLD):
+                  attr: const.T_COLOR = const.A_BOLD):
         # Add title
         title_len = len(text) + 2
         self._title = self.layout.newlabel(1, title_len, 0,
                                            int((self._w-title_len)/2))
-        self._title.set_text(text, attr, h_align=CONST.A_CENTER)
+        self._title.set_text(text, attr, h_align=const.A_CENTER)
 
     def set_border(self):
         self._box.border()
@@ -343,9 +343,9 @@ class ButtonView(LabelView):
         self._disabled_pad = self._newpad(self._h, self._w)
         self._bid = bid
         self._is_disabled = False
-        self._focus_attr = CONST.A_REVERSE
-        self._disabled_attr = CONST.A_DIM
-        self.set_text(text, h_align=CONST.A_CENTER)
+        self._focus_attr = const.A_REVERSE
+        self._disabled_attr = const.A_DIM
+        self.set_text(text, h_align=const.A_CENTER)
 
     @property
     def focus(self):
@@ -373,9 +373,9 @@ class ButtonView(LabelView):
             active_pad = self._focus_pad
         super().update(active_pad, win)
 
-    def set_text(self, label: str = None, attr: CONST.T_COLOR = None,
+    def set_text(self, label: str = None, attr: const.T_COLOR = None,
                  v_align: int = None, h_align: int = None,
-                 f_attr: CONST.T_COLOR = None, d_attr: CONST.T_COLOR = None):
+                 f_attr: const.T_COLOR = None, d_attr: const.T_COLOR = None):
         super().set_text(label, attr, v_align, h_align)
         self.pad.overwrite(self._focus_pad)
         self.pad.overwrite(self._disabled_pad)
@@ -397,11 +397,12 @@ class ListView(Widget):
     """A simple List"""
 
     def __init__(self, layout: ViewLayout, num: int, h: int, w: int, y: int,
-                 x: int):
+                 x: int, margin: int):
         super().__init__(layout, h, w, y, x, num)
         self._list = []
         self._cur_id = 0
         self._len = num
+        self._margin = margin
         self._newitem_y = 0
         self._dispal_y = 0
 
@@ -423,10 +424,10 @@ class ListView(Widget):
         else:
             return False
 
-    def add_item(self, label: str = None, attr: CONST.T_COLOR = None,
-                 v_align: int = None, h_align: int = CONST.A_LEFT,
-                 f_attr: CONST.T_COLOR = None,
-                 d_attr: CONST.T_COLOR = None) -> int:
+    def add_item(self, label: str = None, attr: const.T_COLOR = None,
+                 v_align: int = None, h_align: int = const.A_LEFT,
+                 f_attr: const.T_COLOR = None,
+                 d_attr: const.T_COLOR = None) -> int:
         if (item_y := self._newitem_y) < self._len:
             newitem = self.layout.newbutton(1, self._w, item_y, 0)
             newitem.set_text(label, attr, v_align, h_align, f_attr, d_attr)
@@ -453,16 +454,16 @@ class ListView(Widget):
             self.get_item(prev_id).focus = False
             self.get_cur_item().focus = True
             # Move list
-            if self._cur_id > (self.listdrawy + (self._h-1)):
-                self.move_list(self._cur_id - (self._h-1))
-            elif self._cur_id < self.listdrawy:
-                self.move_list(self._cur_id)
+            if self._cur_id > (self.listdrawy + (self._h-1-self._margin)):
+                self.move_list(self._cur_id - (self._h-1-self._margin))
+            elif self._cur_id < (self.listdrawy + self._margin):
+                self.move_list(self._cur_id - self._margin)
 
-    def update(self, i_id: int = CONST.S_UPDATE_ALL):
-        if i_id is CONST.S_UPDATE_ALL:
+    def update(self, i_id: int = const.S_UPDATE_ALL):
+        if i_id is const.S_UPDATE_ALL:
             for i in self._list:
                 i.update(win=self.pad)
-        elif i_id is not CONST.S_UPDATE_NONE:
+        elif i_id is not const.S_UPDATE_NONE:
             self.get_item(i_id).update(win=self.pad)
         super().update()
 
@@ -470,12 +471,21 @@ class ListView(Widget):
         self.listdrawy = y
 
 
-class ScrollBarView(object):
+class ScrollBarView(Widget):
 
     """A simple scroll bar"""
 
-    def __init__(self):
-        """TODO: to be defined. """
+    def __init__(self, layout: ViewLayout, h: int, y: int, x: int):
+        super().__init__(layout, h, 1, y, x, )
+        # self._uparrow_ch = const.C_UPARROW
+        # self._downarrow_ch = const.C_DOWNARROW
+        # self._slider_ch = const.C_SLIDER
+
+    def set_slider(self, max_len: int, win_h: int):
+        ...
+
+    def move_slider(self, pos: int):
+        ...
 
 
 class MapView(Widget):
@@ -484,8 +494,8 @@ class MapView(Widget):
     def __init__(self, layout: ViewLayout, map_data: dict, h: int, w: int,
                  y: int, x: int):
         self._map = map_data
-        _maph = self._map[CONST.S_MAP_MAPH]
-        _mapw = self._map[CONST.S_MAP_MAPW]
+        _maph = self._map[const.S_MAP_MAPH]
+        _mapw = self._map[const.S_MAP_MAPW]
         super().__init__(layout, h, w, y, x, _maph, _mapw)
         self._cur_gy = 0
         self._cur_gx = 0
@@ -538,29 +548,29 @@ class MapView(Widget):
         self._cur_gx = value
 
     def init_map(self):
-        mapdata = self._map[CONST.S_MAP_MAP]
-        self._margin = self._map[CONST.S_MAP_MARGIN]
-        cells = self._map[CONST.S_MAP_CELL]
+        mapdata = self._map[const.S_MAP_MAP]
+        self._margin = self._map[const.S_MAP_MARGIN]
+        cells = self._map[const.S_MAP_CELL]
         base_layer = self.add_layer()  # create a base map
         for t in mapdata:
             if (c := cells.get(t, None)):
-                color_name = c.get(CONST.S_MAP_COLOR)
+                color_name = c.get(const.S_MAP_COLOR)
                 color = self.get_color(color_name)
                 # raise Exception(color, color_name, c)
-                map_char = c[CONST.S_MAP_CHAR]
+                map_char = c[const.S_MAP_CHAR]
                 base_layer.addch(map_char, color)
 
     def init_grid(self):
-        grid_h = self._map[CONST.S_MAP_GRIDH]
-        grid_w = self._map[CONST.S_MAP_GRIDW]
-        grid_len = self._map.get(CONST.S_MAP_GRID_LEN,
-                                 CONST.DEF_MAP_GRID_LEN)
-        grid_offset = self._map.get(CONST.S_MAP_GRID_OFFSET,
-                                    CONST.DEF_MAP_GRID_OFFSET)
-        grid_space = self._map.get(CONST.S_MAP_GRID_SPACE,
-                                   CONST.DEF_MAP_GRID_SPACE)
-        grid_starty = self._map.get(CONST.S_MAP_GRIDY, CONST.DEF_MAP_GRIDY)
-        grid_startx = self._map.get(CONST.S_MAP_GRIDX, CONST.DEF_MAP_GRIDX)
+        grid_h = self._map[const.S_MAP_GRIDH]
+        grid_w = self._map[const.S_MAP_GRIDW]
+        grid_len = self._map.get(const.S_MAP_GRID_LEN,
+                                 const.DEF_MAP_GRID_LEN)
+        grid_offset = self._map.get(const.S_MAP_GRID_OFFSET,
+                                    const.DEF_MAP_GRID_OFFSET)
+        grid_space = self._map.get(const.S_MAP_GRID_SPACE,
+                                   const.DEF_MAP_GRID_SPACE)
+        grid_starty = self._map.get(const.S_MAP_GRIDY, const.DEF_MAP_GRIDY)
+        grid_startx = self._map.get(const.S_MAP_GRIDX, const.DEF_MAP_GRIDX)
         self._gridh = grid_h
         self._gridw = grid_w
         self._grid_len = grid_len
@@ -643,9 +653,9 @@ class MapView(Widget):
             hex_d, hex_y, hex_x = h
             hex_attr = chattr(hex_d)
             if is_on:
-                attr = hex_attr | CONST.A_REVERSE
+                attr = hex_attr | const.A_REVERSE
             else:
-                attr = hex_attr & ~CONST.A_REVERSE
+                attr = hex_attr & ~const.A_REVERSE
             self.pad.chgat(hex_y, hex_x, 1, attr)
 
 
